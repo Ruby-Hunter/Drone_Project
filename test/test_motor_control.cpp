@@ -1,7 +1,15 @@
-#include "../../../git/Unity/src/unity.h"
-#include <string.h>
+#ifdef UNIT_TEST
+#include <unity.h>
+#endif
 #include <stdlib.h>
-#include "main.cpp"
+#include "motor_control.h"
+
+void setUp(void) {
+    // This is run before EACH TEST
+}
+void tearDown(void) {
+    // This is run after EACH TEST
+}
 
 void test_setSpeed(){
     uint16_t newSpeed = 1199;
@@ -22,4 +30,11 @@ void test_changeSpeed(){
 
     changeSpeed(-3);
     TEST_ASSERT_EQUAL(starterSpeed - 2, getSpeed(1));
+}
+
+int main(int argc, char **argv) {
+    UNITY_BEGIN();
+    RUN_TEST(test_setSpeed);
+    RUN_TEST(test_changeSpeed);
+    return UNITY_END();
 }
