@@ -1,6 +1,4 @@
-#ifdef UNIT_TEST
 #include <unity.h>
-#endif
 #include <stdlib.h>
 #include "motor_control.h"
 
