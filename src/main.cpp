@@ -192,8 +192,7 @@ void sendReadings(){ // Send readings to Saleae
   spres.writeMicroseconds(pwmpres);
 }
 
-
-
+/* ----- MOTOR CONTROL FUNCTIONS ----- */
 void land(){ // Landing sequence
   readPressure();
   static float curPressure = pressure.pressure;
@@ -226,8 +225,6 @@ void forceLand(){ // force the drone to land if pressure sensor isn't working
     delay(80);
   }
 }
-
-
 
 /* ----- Testing Functions ----- */
 
