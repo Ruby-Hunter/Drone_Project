@@ -19,8 +19,10 @@
 
 
 const uint32_t MS_DELAY = 50;
+
 const float MOTION_THRESHOLD = 0.1f;  // in G's
 const float PRESSURE_THRESHOLD = 5.0f; // In hPa
+const uint8_t MOVEMENT_THRESHOLD = 10;
 const float TWO_GS_FORCE = 16384.0f;
 const float GYRO_DPS = 131.0f; // Divide raw data by this for Degrees Per Second (DPS)
 

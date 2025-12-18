@@ -34,6 +34,34 @@ void changeSpeed(int16_t change){
   motor_4_Speed += change;
 }
 
+void moveX(int8_t x_movement){
+  static int8_t x_distance = 0;
+  int8_t delta = x_movement - x_distance;
+  if(abs(delta) > MOVEMENT_THRESHOLD){
+    motor_1_Speed += delta;
+    motor_2_Speed += delta;
+    motor_3_Speed -= delta;
+    motor_4_Speed -= delta;
+    x_distance = x_movement;
+  }
+}
+
+void moveY(int8_t y_movement){
+  static int8_t y_distance = 0;
+  int8_t delta = y_movement - y_distance;
+  if(abs(delta) > MOVEMENT_THRESHOLD){
+    motor_2_Speed += delta;
+    motor_3_Speed += delta;
+    motor_1_Speed -= delta;
+    motor_4_Speed -= delta;
+    y_distance = y_movement;
+  }
+}
+
+void moveZ(int8_t z_movement){ //TODO: Move implementation into here
+  
+}
+
 void writeESCs(){
   motor_1_Speed = constrain(motor_1_Speed, STOP_SPEED, MAX_SPEED);
   motor_2_Speed = constrain(motor_2_Speed, STOP_SPEED, MAX_SPEED);

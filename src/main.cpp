@@ -5,6 +5,7 @@
 #include <Adafruit_DPS310.h>
 #include <cmath>
 #include "motor_control.h"
+#include "remote_control.h"
 #include "config.h"
 
 Servo sx, sy, sz, sdist, spres; // Saleae testing
@@ -26,13 +27,16 @@ float basePressure, hoverPressure;
 // For Testing
 int16_t pwmx, pwmy, pwmz, pwmdist, pwmpres;
 
-enum State { OFF, INIT, HOVERING, LANDING, TESTING };
+enum State { OFF, INIT, HOVERING, FLYING, LANDING, TESTING };
 uint8_t currentState = TESTING;
+
+msgData msg;
 
 void setup() {
   setupPins();
   setupServos();
   setupSensors();
+  setupRC();
   tripleBlink();
   delay(1000);
 }
@@ -43,18 +47,47 @@ void loop() {
 }
 
 void stateMachine(){
-  if(!digitalRead(DRONE_POWER)){
+  if(!digitalRead(DRONE_POWER)){ // Failsafe
     currentState = OFF;
     stopMotors();
+  }
+
+  switch (currentState){
+    case OFF: 
+      if(digitalRead(DRONE_POWER)){
+        currentState = INIT;
+      }
+      break;
+
+    case INIT:
+      currentState = HOVERING;
+      break;
+
+    case HOVERING:
+      if(distance < LANDING_DISTANCE_MM){
+        currentState = LANDING;
+      } else if(!isStable(msg)){
+        currentState = FLYING;
+      }
+      break;
+    
+    case FLYING:
+      if(distance < LANDING_DISTANCE_MM){
+        currentState = LANDING;
+      } else if(isStable(msg)){
+        currentState = HOVERING;
+      }
+      break;
+    
+    case LANDING:
+      currentState = TESTING;
+      break;
   }
 
   switch (currentState){
     case OFF:
       digitalWrite(LED_PIN, HIGH);
       stopMotors();
-      if(digitalRead(DRONE_POWER) == HIGH){
-        currentState = INIT;
-      }
       break;
     
     case INIT:
@@ -65,19 +98,29 @@ void stateMachine(){
       takeOff();
       readPressure();
       hoverPressure = pressure.pressure;
-      currentState = HOVERING;
       break;
     
     case HOVERING:
       readValues();
-      if(distance < LANDING_DISTANCE_MM){
-        currentState = LANDING;
-        break;
-      }
       sendReadings();
+
       balancePitch(accel_x_g);
       balanceRoll(accel_y_g);
       balanceAltitude(pressure.pressure, hoverPressure);
+
+      writeESCs();
+      break;
+    
+    case FLYING:
+      readValues();
+      sendReadings();
+
+      if(xStable(msg)) balancePitch(accel_x_g); // Keep balanced if no move command, else move
+      else moveX(msg.x_change);
+      if(yStable(msg)) balanceRoll(accel_y_g);
+      else moveY(msg.y_change);
+      balanceAltitude(pressure.pressure, hoverPressure);
+
       writeESCs();
       break;
 
@@ -86,7 +129,6 @@ void stateMachine(){
       land();
       stopMotors();
       tripleBlink();
-      currentState = TESTING;
       break;
     
     case TESTING: // Just read values and send them to Saleae
@@ -131,6 +173,10 @@ void setupSensors(){
   bool dpsStart = dps.begin_I2C(0x77);
   dps.configurePressure(DPS310_64HZ, DPS310_16SAMPLES);
   dps.configureTemperature(DPS310_64HZ, DPS310_16SAMPLES);
+}
+
+void setupRC(){
+  remote_control_init(&msg);
 }
 
 /* ----- SENSOR READING FUNCTIONS ----- */
@@ -226,6 +272,12 @@ void forceLand(){ // force the drone to land if pressure sensor isn't working
   }
 }
 
+/* ----- RC Functions ----- */
+void rcISR(){
+  moveX(msg.x_change);
+  moveY(msg.y_change);
+  hoverPressure += msg.z_change;
+}
 /* ----- Testing Functions ----- */
 
 /* ----- Additional Functions -----*/
