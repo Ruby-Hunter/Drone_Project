@@ -90,20 +90,43 @@ void test_balancePitch(){
     motor_init();
     setSpeed(START_SPEED);
 
-    balancePitch(accel_x_g[0]);
+    balancePitch(accel_x_g[0], 0);
     TEST_ASSERT_EQUAL(START_SPEED + 11, getSpeed(1));
     TEST_ASSERT_EQUAL(START_SPEED + 11, getSpeed(2));
 
-    balancePitch(accel_x_g[1]);
+    balancePitch(accel_x_g[1], 0);
     TEST_ASSERT_EQUAL(START_SPEED + 11, getSpeed(1));
     TEST_ASSERT_EQUAL(START_SPEED + 11, getSpeed(2));
     TEST_ASSERT_EQUAL(START_SPEED, getSpeed(3));
     TEST_ASSERT_EQUAL(START_SPEED, getSpeed(4));
 
-    balancePitch(accel_x_g[2]);
+    balancePitch(accel_x_g[2], 0);
     TEST_ASSERT_EQUAL(START_SPEED + 11, getSpeed(1));
     TEST_ASSERT_EQUAL(START_SPEED + 11, getSpeed(2));
     TEST_ASSERT_EQUAL(START_SPEED + 6, getSpeed(3));
+    TEST_ASSERT_EQUAL(START_SPEED + 6, getSpeed(4));
+}
+
+void test_balanceRoll(){
+    float accel_y_g[] = {1, 0, -0.5};
+
+    motor_init();
+    setSpeed(START_SPEED);
+
+    balanceRoll(accel_y_g[0], 0);
+    TEST_ASSERT_EQUAL(START_SPEED + 11, getSpeed(2));
+    TEST_ASSERT_EQUAL(START_SPEED + 11, getSpeed(3));
+
+    balanceRoll(accel_y_g[1], 0);
+    TEST_ASSERT_EQUAL(START_SPEED + 11, getSpeed(2));
+    TEST_ASSERT_EQUAL(START_SPEED + 11, getSpeed(3));
+    TEST_ASSERT_EQUAL(START_SPEED, getSpeed(1));
+    TEST_ASSERT_EQUAL(START_SPEED, getSpeed(4));
+
+    balanceRoll(accel_y_g[2], 0);
+    TEST_ASSERT_EQUAL(START_SPEED + 11, getSpeed(2));
+    TEST_ASSERT_EQUAL(START_SPEED + 11, getSpeed(3));
+    TEST_ASSERT_EQUAL(START_SPEED + 6, getSpeed(1));
     TEST_ASSERT_EQUAL(START_SPEED + 6, getSpeed(4));
 }
 
@@ -116,5 +139,6 @@ int main(int argc, char **argv) {
     RUN_TEST(test_under_max_speed);
     RUN_TEST(test_stopMotors);
     RUN_TEST(test_balancePitch);
+    RUN_TEST(test_balanceRoll);
     return UNITY_END();
 }
