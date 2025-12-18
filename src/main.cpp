@@ -104,8 +104,8 @@ void stateMachine(){
       readValues();
       sendReadings();
 
-      balancePitch(accel_x_g);
-      balanceRoll(accel_y_g);
+      balancePitch(accel_x_g, gyro_x_dps);
+      balanceRoll(accel_y_g, gyro_y_dps);
       balanceAltitude(pressure.pressure, hoverPressure);
 
       writeESCs();
@@ -115,9 +115,9 @@ void stateMachine(){
       readValues();
       sendReadings();
 
-      if(xStable(msg)) balancePitch(accel_x_g); // Keep balanced if no move command, else move
+      if(xStable(msg)) balancePitch(accel_x_g, gyro_x_dps); // Keep balanced if no move command, else move
       else moveX(msg.x_change);
-      if(yStable(msg)) balanceRoll(accel_y_g);
+      if(yStable(msg)) balanceRoll(accel_y_g, gyro_y_dps);
       else moveY(msg.y_change);
       balanceAltitude(pressure.pressure, hoverPressure);
 
