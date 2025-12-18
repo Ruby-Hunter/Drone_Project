@@ -81,14 +81,14 @@ void stopMotors(){
 void balancePitch(float accel_x_g, float gyro_x_dps){
   if(accel_x_g > (0 + MOTION_THRESHOLD)){ // if it pitches too far forwards, increase front motor speeds
     int8_t change = map(accel_x_g, -1, 1, -MAX_CHANGE, MAX_CHANGE);
-    int8_t gyroEffect = map(gyro_x_dps, -60, 60, -0.5, 2.5); // Gyroeffect helps dampen wobbles
+    int8_t gyroEffect = map(gyro_x_dps, -60, 60, -1, 3); // Gyroeffect helps dampen wobbles
     change *= gyroEffect;
     motor_1_Speed += 1 + change;
     motor_2_Speed += 1 + change;
   }
   else if(accel_x_g < (0 - MOTION_THRESHOLD)){ // pitch too far backwards, increase back motor speeds
     int8_t change = map(-accel_x_g, -1, 1, -MAX_CHANGE, MAX_CHANGE); // accel_x_g is negative here
-    int8_t gyroEffect = map(-gyro_x_dps, -60, 60, -0.5, 2.5);
+    int8_t gyroEffect = map(-gyro_x_dps, -60, 60, -1, 3);
     change *= gyroEffect;
     motor_3_Speed += 1 + change;
     motor_4_Speed += 1 + change;
@@ -98,7 +98,7 @@ void balancePitch(float accel_x_g, float gyro_x_dps){
 void balanceRoll(float accel_y_g, float gyro_y_dps){
   if(accel_y_g > (0 + MOTION_THRESHOLD)){
     int8_t change = map(accel_y_g, -1, 1, -MAX_CHANGE, MAX_CHANGE);
-    int8_t gyroEffect = map(gyro_y_dps, -60, 60, -0.5, 2.5);
+    int8_t gyroEffect = map(gyro_y_dps, -60, 60, -1, 3);
     change *= gyroEffect;
     motor_2_Speed += 1 + change;
     motor_3_Speed += 1 + change;
@@ -109,7 +109,7 @@ void balanceRoll(float accel_y_g, float gyro_y_dps){
   }
   else if(accel_y_g < (0 - MOTION_THRESHOLD)){
     int8_t change = map(-accel_y_g, -1, 1, -MAX_CHANGE, MAX_CHANGE);
-    int8_t gyroEffect = map(-gyro_y_dps, -60, 60, -0.5, 2.5);
+    int8_t gyroEffect = map(-gyro_y_dps, -60, 60, -1, 3);
     change *= gyroEffect;
     motor_1_Speed += 1 + change;
     motor_4_Speed += 1 + change;
