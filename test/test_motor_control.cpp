@@ -91,20 +91,20 @@ void test_balancePitch(){
     setSpeed(START_SPEED);
 
     balancePitch(accel_x_g[0], 0);
-    TEST_ASSERT_EQUAL(START_SPEED + 11, getSpeed(1));
-    TEST_ASSERT_EQUAL(START_SPEED + 11, getSpeed(2));
+    TEST_ASSERT_EQUAL(START_SPEED + MAX_CHANGE + 1, getSpeed(1));
+    TEST_ASSERT_EQUAL(START_SPEED + MAX_CHANGE + 1, getSpeed(2));
 
     balancePitch(accel_x_g[1], 0);
-    TEST_ASSERT_EQUAL(START_SPEED + 11, getSpeed(1));
-    TEST_ASSERT_EQUAL(START_SPEED + 11, getSpeed(2));
+    TEST_ASSERT_EQUAL(START_SPEED + MAX_CHANGE + 1, getSpeed(1));
+    TEST_ASSERT_EQUAL(START_SPEED + MAX_CHANGE + 1, getSpeed(2));
     TEST_ASSERT_EQUAL(START_SPEED, getSpeed(3));
     TEST_ASSERT_EQUAL(START_SPEED, getSpeed(4));
 
     balancePitch(accel_x_g[2], 0);
-    TEST_ASSERT_EQUAL(START_SPEED + 11, getSpeed(1));
-    TEST_ASSERT_EQUAL(START_SPEED + 11, getSpeed(2));
-    TEST_ASSERT_EQUAL(START_SPEED + 6, getSpeed(3));
-    TEST_ASSERT_EQUAL(START_SPEED + 6, getSpeed(4));
+    TEST_ASSERT_EQUAL(START_SPEED + MAX_CHANGE + 1, getSpeed(1));
+    TEST_ASSERT_EQUAL(START_SPEED + MAX_CHANGE + 1, getSpeed(2));
+    TEST_ASSERT_EQUAL(START_SPEED + MAX_CHANGE/2 + 1, getSpeed(3));
+    TEST_ASSERT_EQUAL(START_SPEED + MAX_CHANGE/2 + 1, getSpeed(4));
 }
 
 void test_balanceRoll(){
@@ -114,20 +114,20 @@ void test_balanceRoll(){
     setSpeed(START_SPEED);
 
     balanceRoll(accel_y_g[0], 0);
-    TEST_ASSERT_EQUAL(START_SPEED + 11, getSpeed(2));
-    TEST_ASSERT_EQUAL(START_SPEED + 11, getSpeed(3));
+    TEST_ASSERT_EQUAL(START_SPEED + MAX_CHANGE + 1, getSpeed(2));
+    TEST_ASSERT_EQUAL(START_SPEED + MAX_CHANGE + 1, getSpeed(3));
 
     balanceRoll(accel_y_g[1], 0);
-    TEST_ASSERT_EQUAL(START_SPEED + 11, getSpeed(2));
-    TEST_ASSERT_EQUAL(START_SPEED + 11, getSpeed(3));
+    TEST_ASSERT_EQUAL(START_SPEED + MAX_CHANGE + 1, getSpeed(2));
+    TEST_ASSERT_EQUAL(START_SPEED + MAX_CHANGE + 1, getSpeed(3));
     TEST_ASSERT_EQUAL(START_SPEED, getSpeed(1));
     TEST_ASSERT_EQUAL(START_SPEED, getSpeed(4));
 
     balanceRoll(accel_y_g[2], 0);
-    TEST_ASSERT_EQUAL(START_SPEED + 11, getSpeed(2));
-    TEST_ASSERT_EQUAL(START_SPEED + 11, getSpeed(3));
-    TEST_ASSERT_EQUAL(START_SPEED + 6, getSpeed(1));
-    TEST_ASSERT_EQUAL(START_SPEED + 6, getSpeed(4));
+    TEST_ASSERT_EQUAL(START_SPEED + MAX_CHANGE + 1, getSpeed(2));
+    TEST_ASSERT_EQUAL(START_SPEED + MAX_CHANGE + 1, getSpeed(3));
+    TEST_ASSERT_EQUAL(START_SPEED + MAX_CHANGE/2 + 1, getSpeed(1));
+    TEST_ASSERT_EQUAL(START_SPEED + MAX_CHANGE/2 + 1, getSpeed(4));
 }
 
 int main(int argc, char **argv) {

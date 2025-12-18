@@ -26,6 +26,9 @@ const uint8_t MOVEMENT_THRESHOLD = 10;
 const float TWO_GS_FORCE = 16384.0f;
 const float GYRO_DPS = 131.0f; // Divide raw data by this for Degrees Per Second (DPS)
 
+// PID Constants
+const long MAX_CHANGE = 8;
+
 // Motor speed constants (in microseconds)
 const uint16_t STOP_SPEED = 1000;
 const uint16_t START_SPEED = 1320;
