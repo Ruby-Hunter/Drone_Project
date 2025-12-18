@@ -12,8 +12,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Start Github actions
-        uses: echo "Starting github actions!"
 
       # - name: Set up Python
       #   uses: actions/setup-python@v5
