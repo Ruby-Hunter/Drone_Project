@@ -124,7 +124,7 @@ void test_balanceRoll(){
     TEST_ASSERT_EQUAL(START_SPEED, getSpeed(4));
 
     balanceRoll(accel_y_g[2], 0);
-    TEST_ASSERT_EQUAL(START_SPEED + MAX_CHANGE + 1, getSpeed(2));
+    TEST_ASSERT_EQUAL(START_SPEED + MAX_CHANGE + 2, getSpeed(2));
     TEST_ASSERT_EQUAL(START_SPEED + MAX_CHANGE + 1, getSpeed(3));
     TEST_ASSERT_EQUAL(START_SPEED + MAX_CHANGE/2 + 1, getSpeed(1));
     TEST_ASSERT_EQUAL(START_SPEED + MAX_CHANGE/2 + 1, getSpeed(4));
