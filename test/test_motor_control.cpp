@@ -11,7 +11,6 @@ static void assert_all_motors(uint16_t speed, bool equal = true){ // Helper func
         } else{
             TEST_ASSERT_NOT_EQUAL(speed, getSpeed(i));
         }
-        
     }
 }
 

@@ -118,12 +118,17 @@ void balanceRoll(float accel_y_g, float gyro_y_dps){
 
 void balanceAltitude(float pressure, float hoverPressure){
   //TODO: Derivative control of altitude balancing
+
+  /* Method 1: if it's falling, move it */
   if(pressure < (hoverPressure - PRESSURE_THRESHOLD)){ // drone is falling
     changeSpeed(3);
   }
   else if(pressure > (hoverPressure + PRESSURE_THRESHOLD)){ // drone is rising
     changeSpeed(-3);
   }
+
+  /* Method 2: Check exact altitude relative to ground */
+
 }
 
 void takeOff(){

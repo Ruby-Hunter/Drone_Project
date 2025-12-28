@@ -37,4 +37,5 @@ const uint16_t MAX_HOVER_SPEED = 1550;
 const uint16_t MAX_SPEED = 1550;
 
 // Other constants
-const int16_t LANDING_DISTANCE_MM = 200;
+const int16_t TAKEOFF_HEIGHT_MM = 1000; // Target height for takeoff in mm
+const int16_t LANDING_DISTANCE_MM = 200; // Distance from sensor that triggers landing sequence

@@ -23,6 +23,7 @@ int16_t distance; // Distance in mm
 sensors_event_t temp, pressure;
 
 float basePressure, hoverPressure;
+float baseAltitude, altitude;
 
 // For Testing
 int16_t pwmx, pwmy, pwmz, pwmdist, pwmpres;
@@ -33,6 +34,7 @@ uint8_t currentState = TESTING;
 msgData msg;
 
 void setup() {
+  setupSerial();
   setupPins();
   setupServos();
   setupSensors();
@@ -44,6 +46,7 @@ void setup() {
 void loop() {
   stateMachine();
   delay(MS_DELAY);
+  Serial.println("USB serial is working");
 }
 
 void stateMachine(){
@@ -95,9 +98,11 @@ void stateMachine(){
       delay(3000);  // Wait for ESCs to initialize
       readPressure();
       basePressure = pressure.pressure; // pressure.altitude?
+      baseAltitude = pressure.altitude;
       takeOff();
       readPressure();
       hoverPressure = pressure.pressure;
+      altitude = pressure.altitude;
       break;
     
     case HOVERING:
@@ -161,7 +166,7 @@ void setupServos(){
 void setupSensors(){
   Wire.setSCL(PB6);
   Wire.setSDA(PB7);
-  Wire.begin(); // SCL = PB6, SDA = PB7
+  Wire.begin(); // default SCL = PB6, SDA = PB7
 
   mpu.initialize();
   mpu.setFullScaleGyroRange(MPU6050_GYRO_FS_250);
@@ -177,6 +182,12 @@ void setupSensors(){
 
 void setupRC(){
   remote_control_init(&msg);
+}
+
+void setupSerial(){
+  delay(2000);
+  Serial.begin(115200);
+  Serial.println("USB CDC working");
 }
 
 /* ----- SENSOR READING FUNCTIONS ----- */
