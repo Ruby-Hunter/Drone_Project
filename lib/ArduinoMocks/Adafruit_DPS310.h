@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include "Wire.h"
 
 struct sensors_event_t {
     float pressure = 1000.0f;
@@ -7,7 +8,7 @@ struct sensors_event_t {
 
 class Adafruit_DPS310 {
 public:
-    bool begin_I2C(uint8_t addr) { return true; }
+    bool begin_I2C(uint8_t addr, TwoWire* wire = nullptr) { return true; }
     void configurePressure(int, int) {}
     void configureTemperature(int, int) {}
     void getEvents(sensors_event_t* temp, sensors_event_t* pressure) {

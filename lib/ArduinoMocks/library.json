@@ -1,0 +1,9 @@
+{
+    "name": "ArduinoMocks",
+    "version": "1.0.0",
+    "frameworks": "*",
+    "platforms": "native",
+    "build": {
+        "libArchive": true
+    }
+}

@@ -43,8 +43,8 @@ static void readPressureHW(SensorData& data){
 
 /* ----- Sensor Setup and Reading Functions ----- */
 void setupSensors(){
-  Wire.setSCL(PB6);
-  Wire.setSDA(PB7);
+  Wire.setSCL(I2C_SCL);
+  Wire.setSDA(I2C_SDA);
   Wire.begin(); // default SCL = PB6, SDA = PB7
 
   mpu.initialize();

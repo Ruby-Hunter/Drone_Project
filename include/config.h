@@ -8,6 +8,8 @@
   #define MOTOR4 4
   #define LED_PIN 13
   #define DRONE_POWER 5
+  #define I2C_SCL 6
+  #define I2C_SDA 7
 #else
   #define MOTOR1 PA8
   #define MOTOR2 PA9
@@ -15,6 +17,8 @@
   #define MOTOR4 PA11
   #define LED_PIN PC13
   #define DRONE_POWER PB4
+  #define I2C_SCL PB6
+  #define I2C_SDA PB7
 #endif
 
 

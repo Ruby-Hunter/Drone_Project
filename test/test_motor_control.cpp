@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "motor_control.h"
 #include "config.h"
+#include "test_motor_control.h"
 
 static void assert_all_motors(uint16_t speed, bool equal = true){ // Helper function for tests
     for(int i = 0; i < 4; i++){
@@ -12,14 +13,6 @@ static void assert_all_motors(uint16_t speed, bool equal = true){ // Helper func
             TEST_ASSERT_NOT_EQUAL(speed, getSpeed(i));
         }
     }
-}
-
-/* ----- We need these 2 functions to exist for it to run ----- */
-void setUp(void) {
-    // This is run before EACH TEST
-}
-void tearDown(void) {
-    // This is run after EACH TEST
 }
 
 /* ----- TESTS ----- */
@@ -127,17 +120,4 @@ void test_balanceRoll(){
     TEST_ASSERT_EQUAL(START_SPEED + MAX_CHANGE + 1, getSpeed(3));
     TEST_ASSERT_EQUAL(START_SPEED + MAX_CHANGE/2 + 1, getSpeed(1));
     TEST_ASSERT_EQUAL(START_SPEED + MAX_CHANGE/2 + 1, getSpeed(4));
-}
-
-int main(int argc, char **argv) {
-    UNITY_BEGIN();
-    RUN_TEST(test_motor_init);
-    RUN_TEST(test_setSpeed);
-    RUN_TEST(test_changeSpeed);
-    RUN_TEST(test_over_max_speed);
-    RUN_TEST(test_under_max_speed);
-    RUN_TEST(test_stopMotors);
-    RUN_TEST(test_balancePitch);
-    RUN_TEST(test_balanceRoll);
-    return UNITY_END();
 }
