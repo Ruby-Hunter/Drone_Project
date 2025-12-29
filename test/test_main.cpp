@@ -23,5 +23,6 @@ int main(int argc, char **argv) {
     RUN_TEST(test_balancePitch);
     RUN_TEST(test_balanceRoll);
     RUN_TEST(test_readGyro);
+    RUN_TEST(test_readLidar);
     return UNITY_END();
 }
