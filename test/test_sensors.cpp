@@ -27,3 +27,12 @@ void test_readGyro(){
     TEST_ASSERT(data.gyro_y_dps < 500.0f && data.gyro_y_dps > -500.0f);
     TEST_ASSERT(data.gyro_z_dps < 500.0f && data.gyro_z_dps > -500.0f);
 }
+
+void test_readLidar(){
+    setLidarFunc([](SensorData& data){
+        data.distance_mm = 1000; // Dummy distance
+    });
+    SensorData data;
+    readLidar(data);
+    TEST_ASSERT_EQUAL_INT(1000, data.distance_mm);
+}
