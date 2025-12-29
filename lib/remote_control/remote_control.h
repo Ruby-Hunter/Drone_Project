@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 
+// Remote control message data structure
 struct msgData{
     int8_t x_change; // Forwards/backwards
     int8_t y_change; // Sideways

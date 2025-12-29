@@ -1,33 +1,20 @@
 #include <Servo.h>
-#include <Wire.h>
-#include <MPU6050.h>
-#include <Adafruit_VL53L1X.h>
-#include <Adafruit_DPS310.h>
 #include <cmath>
 #include "motor_control.h"
 #include "remote_control.h"
+#include "sensors.h"
 #include "config.h"
 
 Servo sx, sy, sz, sdist, spres; // Saleae testing
 
-// Initialize sensor objects
-Adafruit_VL53L1X lidar = Adafruit_VL53L1X();
-Adafruit_DPS310 dps;
-MPU6050 mpu;
-
-int16_t ax, ay, az;
-int16_t gx, gy, gz;
-float accel_x_g, accel_y_g, accel_z_g;
-float gyro_x_dps, gyro_y_dps, gyro_z_dps;
-int16_t distance; // Distance in mm
-sensors_event_t temp, pressure;
-
+SensorData sData; // sensor data
 float basePressure, hoverPressure;
 float baseAltitude, altitude;
 
-// For Testing
+// For Sending to Saleae
 int16_t pwmx, pwmy, pwmz, pwmdist, pwmpres;
 
+// State Machine states
 enum State { OFF, INIT, HOVERING, FLYING, LANDING, TESTING };
 uint8_t currentState = TESTING;
 
@@ -67,7 +54,7 @@ void stateMachine(){
       break;
 
     case HOVERING:
-      if(distance < LANDING_DISTANCE_MM){
+      if(sData.distance_mm < LANDING_DISTANCE_MM){
         currentState = LANDING;
       } else if(!isStable(msg)){
         currentState = FLYING;
@@ -75,7 +62,7 @@ void stateMachine(){
       break;
     
     case FLYING:
-      if(distance < LANDING_DISTANCE_MM){
+      if(sData.distance_mm < LANDING_DISTANCE_MM){
         currentState = LANDING;
       } else if(isStable(msg)){
         currentState = HOVERING;
@@ -96,35 +83,35 @@ void stateMachine(){
     case INIT:
       tripleBlink();
       delay(3000);  // Wait for ESCs to initialize
-      readPressure();
-      basePressure = pressure.pressure; // pressure.altitude?
-      baseAltitude = pressure.altitude;
+      readPressure(sData);
+      basePressure = sData.pressure.pressure; // pressure.altitude?
+      baseAltitude = sData.pressure.altitude;
       takeOff();
-      readPressure();
-      hoverPressure = pressure.pressure;
-      altitude = pressure.altitude;
+      readPressure(sData);
+      hoverPressure = sData.pressure.pressure;
+      altitude = sData.pressure.altitude;
       break;
     
     case HOVERING:
-      readValues();
+      readValues(sData);
       sendReadings();
 
-      balancePitch(accel_x_g, gyro_x_dps);
-      balanceRoll(accel_y_g, gyro_y_dps);
-      balanceAltitude(pressure.pressure, hoverPressure);
+      balancePitch(sData.accel_x_g, sData.gyro_x_dps);
+      balanceRoll(sData.accel_y_g, sData.gyro_y_dps);
+      balanceAltitude(sData.pressure.pressure, hoverPressure);
 
       writeESCs();
       break;
     
     case FLYING:
-      readValues();
+      readValues(sData);
       sendReadings();
 
-      if(xStable(msg)) balancePitch(accel_x_g, gyro_x_dps); // Keep balanced if no move command, else move
+      if(xStable(msg)) balancePitch(sData.accel_x_g, sData.gyro_x_dps); // Keep balanced if no move command, else move
       else moveX(msg.x_change);
-      if(yStable(msg)) balanceRoll(accel_y_g, gyro_y_dps);
+      if(yStable(msg)) balanceRoll(sData.accel_y_g, sData.gyro_y_dps);
       else moveY(msg.y_change);
-      balanceAltitude(pressure.pressure, hoverPressure);
+      balanceAltitude(sData.pressure.pressure, hoverPressure);
 
       writeESCs();
       break;
@@ -138,7 +125,7 @@ void stateMachine(){
     
     case TESTING: // Just read values and send them to Saleae
       digitalWrite(LED_PIN, HIGH);
-      readValues();
+      readValues(sData);
       sendReadings();
       delay(150);
       break;
@@ -163,22 +150,7 @@ void setupServos(){
   spres.attach(PA6);
 }
 
-void setupSensors(){
-  Wire.setSCL(PB6);
-  Wire.setSDA(PB7);
-  Wire.begin(); // default SCL = PB6, SDA = PB7
 
-  mpu.initialize();
-  mpu.setFullScaleGyroRange(MPU6050_GYRO_FS_250);
-  mpu.setFullScaleAccelRange(MPU6050_ACCEL_FS_2);
-
-  bool lidarStart = lidar.begin(0x29, &Wire);
-  lidar.startRanging();
-
-  bool dpsStart = dps.begin_I2C(0x77);
-  dps.configurePressure(DPS310_64HZ, DPS310_16SAMPLES);
-  dps.configureTemperature(DPS310_64HZ, DPS310_16SAMPLES);
-}
 
 void setupRC(){
   remote_control_init(&msg);
@@ -191,56 +163,13 @@ void setupSerial(){
 }
 
 /* ----- SENSOR READING FUNCTIONS ----- */
-void readValues(){ // Read all sensors
-  readGyro();
-  readLidar();
-  readPressure();
-}
-
-void readGyro(){ // Read from Gyro
-  mpu.getAcceleration(&ax, &ay, &az);
-  mpu.getRotation(&gx, &gy, &gz);
-  
-  accel_x_g = ax / TWO_GS_FORCE;
-  accel_y_g = ay / TWO_GS_FORCE;
-  accel_z_g = az / TWO_GS_FORCE;
-
-  gyro_x_dps = gx / GYRO_DPS;
-  gyro_y_dps = gy / GYRO_DPS;
-  gyro_z_dps = gz / GYRO_DPS;
-
-  // Constrain to ±1g range
-  // accel_x_g = constrain(accel_x_g, -1.0, 1.0);
-  // accel_y_g = constrain(accel_y_g, -1.0, 1.0);
-  // accel_z_g = constrain(accel_z_g, -1.0, 1.0);
-}
-
-void readLidar(){ // Read from Lidar TOF sensor
-  if (lidar.dataReady()) {
-    distance = lidar.distance(); // Distance in millimeters
-    // if (distance != -1) {
-    //   Serial.print("Distance: ");
-    //   Serial.print(distance);
-    //   Serial.println(" mm");
-    // } else {
-    //   Serial.println("Distance Out of range");
-    // }
-
-    lidar.clearInterrupt(); // Reset data ready flag
-  }
-}
-
-void readPressure(){ // Read from pressure sensor
-  dps.getEvents(&temp, &pressure);
-}
-
 void sendReadings(){ // Send readings to Saleae
   // Reading on Saleae
-  pwmx = 1500 + (accel_x_g * 500);  // -1g → 1000, 0g → 1500, +1g → 2000
-  pwmy = 1500 + (accel_y_g * 500);
-  pwmz = 1000 + (accel_z_g * 500);
-  pwmdist = 1000 + (distance/4);
-  pwmpres = pressure.pressure + 200; // 857.81
+  pwmx = 1500 + (sData.accel_x_g * 500);  // -1g → 1000, 0g → 1500, +1g → 2000
+  pwmy = 1500 + (sData.accel_y_g * 500);
+  pwmz = 1000 + (sData.accel_z_g * 500);
+  pwmdist = 1000 + (sData.distance_mm/4);
+  pwmpres = sData.pressure.pressure + 200; // 857.81
 
   sx.writeMicroseconds(pwmx);
   sy.writeMicroseconds(pwmy);
@@ -251,12 +180,12 @@ void sendReadings(){ // Send readings to Saleae
 
 /* ----- MOTOR CONTROL FUNCTIONS ----- */
 void land(){ // Landing sequence
-  readPressure();
-  static float curPressure = pressure.pressure;
+  readPressure(sData);
+  static float curPressure = sData.pressure.pressure;
   while((getSpeed(1) + getSpeed(2) + getSpeed(3) + getSpeed(4)) > 4800) {
-    readPressure();
-    if(pressure.pressure < curPressure - PRESSURE_THRESHOLD){ // if drone is falling, don't adjust motors
-      curPressure = pressure.pressure;
+    readPressure(sData);
+    if(sData.pressure.pressure < curPressure - PRESSURE_THRESHOLD){ // if drone is falling, don't adjust motors
+      curPressure = sData.pressure.pressure;
     } else{ // if drone is not falling, decrease motor speed
       changeSpeed(-1);
       writeESCs();
