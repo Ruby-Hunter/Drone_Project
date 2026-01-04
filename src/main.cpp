@@ -1,5 +1,7 @@
 #include <Servo.h>
 #include <cmath>
+#include <cstring>
+#include <Arduino.h>
 #include "motor_control.h"
 #include "remote_control.h"
 #include "sensors.h"
@@ -20,12 +22,24 @@ uint8_t currentState = TESTING;
 
 msgData msg;
 
+/* ----- FUNCTION DECLARATIONS ----- */
+void setupPins();
+void setupServos();
+void setupRC();
+void setupSerial();
+void stateMachine();
+void sendReadings();
+void land();
+void forceLand();
+void rcISR();
+void tripleBlink();
+
 void setup() {
   setupSerial();
   setupPins();
   setupServos();
   setupSensors();
-  setupRC();
+  // setupRC();
   tripleBlink();
   delay(1000);
 }

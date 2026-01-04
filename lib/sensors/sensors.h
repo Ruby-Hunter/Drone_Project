@@ -1,8 +1,5 @@
 #pragma once
 #include <stdint.h>
-#include <Wire.h>
-#include <MPU6050.h>
-#include <Adafruit_VL53L1X.h>
 #include <Adafruit_DPS310.h>
 
 /* ----- Sensor Data Structure ----- */

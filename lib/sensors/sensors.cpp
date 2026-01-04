@@ -1,5 +1,9 @@
 #include "sensors.h"
 #include "config.h"
+#include <Wire.h>
+#include "I2Cdev.h"
+#include "MPU6050.h"
+#include <Adafruit_VL53L1X.h>
 
 // sensor objects
 Adafruit_VL53L1X lidar;
