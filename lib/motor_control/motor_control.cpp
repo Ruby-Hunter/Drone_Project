@@ -131,17 +131,6 @@ void balanceAltitude(float pressure, float hoverPressure){
 
 }
 
-void takeOff(){
-  
-  for (int pwm = STOP_SPEED; pwm <= START_SPEED; pwm += (5 + sqrt(START_SPEED - pwm))) {
-    setSpeed(pwm);
-    writeESCs();
-    delay(50);
-  }
-  
-  digitalWrite(LED_PIN, LOW);
-}
-
 // void land(){
 // }
 

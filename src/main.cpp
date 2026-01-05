@@ -19,6 +19,7 @@ int16_t pwmx, pwmy, pwmz, pwmdist, pwmpres;
 // State Machine states
 enum State { OFF, INIT, HOVERING, FLYING, LANDING, TESTING };
 uint8_t currentState = TESTING;
+uint32_t lastTick = 0;
 
 msgData msg;
 
@@ -46,9 +47,11 @@ void setup() {
 }
 
 void loop() {
-  stateMachine();
-  delay(MS_DELAY);
-  // Serial.println("USB serial is working");
+  if(millis() - lastTick >= MS_DELAY){
+    lastTick = millis();
+    stateMachine();
+    Serial.println("Tick");
+  }
 }
 
 void stateMachine(){
@@ -200,6 +203,17 @@ void sendReadings(){ // Send readings to Saleae
 }
 
 /* ----- MOTOR CONTROL FUNCTIONS ----- */
+void takeOff(){
+  //TODO: Takeoff should bring drone specific altitude
+  for (int pwm = STOP_SPEED; pwm <= START_SPEED; pwm += (5 + sqrt(START_SPEED - pwm))) {
+    setSpeed(pwm);
+    writeESCs();
+    delay(50);
+  }
+  
+  digitalWrite(LED_PIN, LOW);
+}
+
 void land(){ // Landing sequence
   readPressure(sData);
   static float curPressure = sData.pressure.pressure;
