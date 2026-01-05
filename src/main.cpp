@@ -33,10 +33,11 @@ void land();
 void forceLand();
 void rcISR();
 void tripleBlink();
+void fiveBlink();
 
 void setup() {
-  setupSerial();
   setupPins();
+  setupSerial();
   setupServos();
   setupSensors();
   // setupRC();
@@ -47,7 +48,7 @@ void setup() {
 void loop() {
   stateMachine();
   delay(MS_DELAY);
-  Serial.println("USB serial is working");
+  // Serial.println("USB serial is working");
 }
 
 void stateMachine(){
@@ -95,7 +96,7 @@ void stateMachine(){
       break;
     
     case INIT:
-      tripleBlink();
+      fiveBlink();
       delay(3000);  // Wait for ESCs to initialize
       readPressure(sData);
       basePressure = sData.pressure.pressure; // pressure.altitude?
@@ -134,7 +135,7 @@ void stateMachine(){
       digitalWrite(LED_PIN, HIGH);
       land();
       stopMotors();
-      tripleBlink();
+      fiveBlink();
       break;
     
     case TESTING: // Just read values and send them to Saleae
@@ -151,7 +152,6 @@ void setupPins(){
   pinMode(DRONE_POWER, INPUT);
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(PC13, HIGH); // LED off
-  tripleBlink();
 }
 
 void setupServos(){
@@ -162,6 +162,7 @@ void setupServos(){
   sz.attach(PA2);
   sdist.attach(PA3);
   spres.attach(PA6);
+  Serial.println("Servos initialized");
 }
 
 
@@ -171,9 +172,15 @@ void setupRC(){
 }
 
 void setupSerial(){
-  delay(2000);
   Serial.begin(115200);
-  Serial.println("USB CDC working");
+  delay(3000);
+  if(Serial){
+    Serial.println("USB CDC initialized");
+    tripleBlink();
+    delay(500);
+    tripleBlink();
+  }
+  Serial.println("USB CDC setup complete");
 }
 
 /* ----- SENSOR READING FUNCTIONS ----- */
@@ -237,6 +244,15 @@ void rcISR(){
 /* ----- Additional Functions -----*/
 void tripleBlink(){ // Blinks the onboard LED 3x
   for(int i=0;i<3;i++){
+    digitalWrite(PC13, LOW);
+    delay(200);
+    digitalWrite(PC13, HIGH);
+    delay(200);
+  }
+}
+
+void fiveBlink(){ // Blinks the onboard LED 5x
+  for(int i=0;i<5;i++){
     digitalWrite(PC13, LOW);
     delay(200);
     digitalWrite(PC13, HIGH);

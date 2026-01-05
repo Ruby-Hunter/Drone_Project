@@ -47,22 +47,28 @@ static void readPressureHW(SensorData& data){
 
 /* ----- Sensor Setup and Reading Functions ----- */
 void setupSensors(){
+    Serial.println("Initializing I2C...");
   Wire.setSCL(I2C_SCL);
   Wire.setSDA(I2C_SDA);
   Wire.begin(); // default SCL = PB6, SDA = PB7
 
+    Serial.println("Initializing Gyro...");
   mpu.initialize();
   mpu.setFullScaleGyroRange(MPU6050_GYRO_FS_250);
   mpu.setFullScaleAccelRange(MPU6050_ACCEL_FS_2);
 
+  Serial.println("Initializing LIDAR...");
   bool lidarStart = lidar.begin(0x29, &Wire);
   lidar.startRanging();
 
+  Serial.println("Initializing Pressure...");
   bool dpsStart = dps.begin_I2C(0x77, &Wire);
   dps.configurePressure(DPS310_64HZ, DPS310_16SAMPLES);
   dps.configureTemperature(DPS310_64HZ, DPS310_16SAMPLES);
 
+  Serial.println("Setting up sensor function pointers...");
   initDrivers();
+  Serial.println("Sensors initialized");
 }
 
 void initDrivers(){
