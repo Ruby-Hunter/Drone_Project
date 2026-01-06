@@ -24,8 +24,8 @@
 
 const uint32_t MS_DELAY = 50;
 
-const float PRESSURE_CHANGE_TO_ALTITUDE_CM = 0.001f; // 1 hPa = 0.01 m altitude
-const float ALTITUDE_THRESHOLD_CM = 10.0f; // in cm
+const float PRESSURE_CHANGE_TO_ALTITUDE_MM = 0.0001f; // 1 hPa = 0.01 m altitude
+const float ALTITUDE_THRESHOLD_MM = 50.0f; // in mm
 const float MOTION_THRESHOLD = 0.1f;  // in G's
 const float PRESSURE_THRESHOLD = 0.01f; // In hPa
 const uint8_t MOVEMENT_THRESHOLD = 10;

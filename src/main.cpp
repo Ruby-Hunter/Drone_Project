@@ -82,7 +82,7 @@ void stateMachine(){
       break;
     
     case TAKEOFF:
-      if(abs(altitude - TAKEOFF_HEIGHT_MM) <= ALTITUDE_THRESHOLD_CM){
+      if(abs(sData.distance_mm - TAKEOFF_HEIGHT_MM) <= ALTITUDE_THRESHOLD_MM){
         currentState = HOVERING;
       }
       break;
@@ -123,8 +123,7 @@ void stateMachine(){
 
       readPressure(sData);
       basePressure = sData.pressure.pressure;
-      hoverPressure = basePressure + 100*PRESSURE_CHANGE_TO_ALTITUDE_CM; // Set to hover to 1m above base
-      takeOff();
+      hoverPressure = basePressure + TAKEOFF_HEIGHT_MM*PRESSURE_CHANGE_TO_ALTITUDE_MM; // Set to hover to 1m above base
       break;
     
     case TAKEOFF:
@@ -233,7 +232,7 @@ void sendReadings(){ // Send readings to Saleae
   Serial.print(" | Distance (mm): "); Serial.print(sData.distance_mm);
   Serial.print(" | BasePressure (hPa): "); Serial.print(basePressure);
   Serial.print(" | Pressure (hPa): "); Serial.print(sData.pressure.pressure);
-  Serial.print(" | Altitude (cm): "); Serial.println((sData.pressure.pressure - basePressure) / PRESSURE_CHANGE_TO_ALTITUDE_CM);
+  Serial.print(" | Altitude (mm): "); Serial.println((sData.pressure.pressure - basePressure) / PRESSURE_CHANGE_TO_ALTITUDE_MM);
 }
 
 /* ----- MOTOR CONTROL FUNCTIONS ----- */
