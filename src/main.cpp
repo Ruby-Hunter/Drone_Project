@@ -237,6 +237,7 @@ void sendReadings(){ // Send readings to Saleae
 /* ----- MOTOR CONTROL FUNCTIONS ----- */
 void takeOff(){
   changeSpeed(TAKEOFF_SPEED * ((TAKEOFF_HEIGHT_MM - sData.distance_mm)/TAKEOFF_HEIGHT_MM) + 1); // Gradually increase speed
+  // hehehehaw
 }
 
 void land(){ // Landing sequence
