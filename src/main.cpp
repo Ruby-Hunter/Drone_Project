@@ -69,7 +69,7 @@ void stateMachine(){
     count = 0;
   }
 
-  switch (currentState){
+  switch (currentState){ // State changes
     case OFF: 
       if(digitalRead(DRONE_POWER)){
         currentState = INIT;
@@ -109,7 +109,7 @@ void stateMachine(){
       break;
   }
 
-  switch (currentState){
+  switch (currentState){ // State Actions
     case OFF:
       digitalWrite(LED_PIN, HIGH);
       stopMotors();
@@ -128,7 +128,6 @@ void stateMachine(){
     
     case TAKEOFF:
       readPressure(sData);
-      altitude = sData.pressure.pressure - basePressure;
       takeOff();
       break;
     
@@ -237,14 +236,7 @@ void sendReadings(){ // Send readings to Saleae
 
 /* ----- MOTOR CONTROL FUNCTIONS ----- */
 void takeOff(){
-  //TODO: Takeoff should bring drone specific altitude
-  for (int pwm = STOP_SPEED; pwm <= START_SPEED; pwm += (5 + sqrt(START_SPEED - pwm))) {
-    setSpeed(pwm);
-    writeESCs();
-    delay(50);
-  }
-  
-  digitalWrite(LED_PIN, LOW);
+  changeSpeed(TAKEOFF_SPEED * ((TAKEOFF_HEIGHT_MM - sData.distance_mm)/TAKEOFF_HEIGHT_MM) + 1); // Gradually increase speed
 }
 
 void land(){ // Landing sequence
