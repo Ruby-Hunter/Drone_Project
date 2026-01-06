@@ -35,6 +35,9 @@ const float GYRO_DPS = 131.0f; // Divide raw data by this for Degrees Per Second
 // PID Constants
 const long MAX_CHANGE = 8;
 
+// Take off Constants
+const long TAKEOFF_SPEED = 8;
+
 // Motor speed constants (in microseconds)
 const uint16_t STOP_SPEED = 1000;
 const uint16_t START_SPEED = 1320;
