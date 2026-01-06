@@ -18,8 +18,9 @@ int16_t pwmx, pwmy, pwmz, pwmdist, pwmpres;
 
 // State Machine states
 enum State { OFF, INIT, HOVERING, FLYING, LANDING, TESTING };
-uint8_t currentState = TESTING;
+uint8_t currentState = OFF;
 uint32_t lastTick = 0;
+int count = 0;
 
 msgData msg;
 
@@ -42,6 +43,7 @@ void setup() {
   setupServos();
   setupSensors();
   // setupRC();
+  Serial.println("Setup complete");
   tripleBlink();
   delay(1000);
 }
@@ -50,14 +52,21 @@ void loop() {
   if(millis() - lastTick >= MS_DELAY){
     lastTick = millis();
     stateMachine();
-    Serial.println("Tick");
+    // Serial.println("Tick");
   }
 }
 
 void stateMachine(){
   if(!digitalRead(DRONE_POWER)){ // Failsafe
-    currentState = OFF;
-    stopMotors();
+    count++;
+    if(count > 10){
+      if(currentState != OFF || currentState != TESTING){
+        currentState = OFF;
+        stopMotors();
+      }
+    }
+  } else{
+    count = 0;
   }
 
   switch (currentState){
@@ -74,11 +83,12 @@ void stateMachine(){
     case HOVERING:
       if(sData.distance_mm < LANDING_DISTANCE_MM){
         currentState = LANDING;
-      } else if(!isStable(msg)){
-        currentState = FLYING;
-      }
+      } 
+      // else if(!isStable(msg)){
+      //   currentState = FLYING;
+      // }
       break;
-    
+     
     case FLYING:
       if(sData.distance_mm < LANDING_DISTANCE_MM){
         currentState = LANDING;
@@ -96,18 +106,19 @@ void stateMachine(){
     case OFF:
       digitalWrite(LED_PIN, HIGH);
       stopMotors();
+      Serial.println("Motors off");
       break;
     
     case INIT:
+      Serial.println("Starting up");
       fiveBlink();
       delay(3000);  // Wait for ESCs to initialize
+
       readPressure(sData);
-      basePressure = sData.pressure.pressure; // pressure.altitude?
-      baseAltitude = sData.pressure.altitude;
+      basePressure = sData.pressure.pressure;
+      hoverPressure = basePressure + 100*PRESSURE_CHANGE_TO_ALTITUDE_CM; // Set to hover to 1m above base
       takeOff();
       readPressure(sData);
-      hoverPressure = sData.pressure.pressure;
-      altitude = sData.pressure.altitude;
       break;
     
     case HOVERING:
@@ -143,9 +154,10 @@ void stateMachine(){
     
     case TESTING: // Just read values and send them to Saleae
       digitalWrite(LED_PIN, HIGH);
+      Serial.println("Testing Mode");
       readValues(sData);
       sendReadings();
-      delay(150);
+      delay(200);
       break;
   }
 }
@@ -160,11 +172,11 @@ void setupPins(){
 void setupServos(){
   motor_init();
   
-  sx.attach(PA0);
-  sy.attach(PA1);
-  sz.attach(PA2);
-  sdist.attach(PA3);
-  spres.attach(PA6);
+  // sx.attach(PA0);
+  // sy.attach(PA1);
+  // sz.attach(PA2);
+  // sdist.attach(PA3);
+  // spres.attach(PA6);
   Serial.println("Servos initialized");
 }
 
@@ -189,17 +201,27 @@ void setupSerial(){
 /* ----- SENSOR READING FUNCTIONS ----- */
 void sendReadings(){ // Send readings to Saleae
   // Reading on Saleae
-  pwmx = 1500 + (sData.accel_x_g * 500);  // -1g → 1000, 0g → 1500, +1g → 2000
-  pwmy = 1500 + (sData.accel_y_g * 500);
-  pwmz = 1000 + (sData.accel_z_g * 500);
-  pwmdist = 1000 + (sData.distance_mm/4);
-  pwmpres = sData.pressure.pressure + 200; // 857.81
+  // pwmx = 1500 + (sData.accel_x_g * 500);  // -1g → 1000, 0g → 1500, +1g → 2000
+  // pwmy = 1500 + (sData.accel_y_g * 500);
+  // pwmz = 1000 + (sData.accel_z_g * 500);
+  // pwmdist = 1000 + (sData.distance_mm/4);
+  // pwmpres = sData.pressure.pressure + 200; // 857.81
 
-  sx.writeMicroseconds(pwmx);
-  sy.writeMicroseconds(pwmy);
-  sz.writeMicroseconds(pwmz);
-  sdist.writeMicroseconds(pwmdist);
-  spres.writeMicroseconds(pwmpres);
+  // sx.writeMicroseconds(pwmx);
+  // sy.writeMicroseconds(pwmy);
+  // sz.writeMicroseconds(pwmz);
+  // sdist.writeMicroseconds(pwmdist);
+  // spres.writeMicroseconds(pwmpres);
+  Serial.print("Accel X (g): "); Serial.print(sData.accel_x_g);
+  Serial.print(" | Accel Y (g): "); Serial.print(sData.accel_y_g);
+  Serial.print(" | Accel Z (g): "); Serial.print(sData.accel_z_g);
+  Serial.print(" | Gyro X (dps): "); Serial.print(sData.gyro_x_dps);
+  Serial.print(" | Gyro Y (dps): "); Serial.print(sData.gyro_y_dps);
+  Serial.print(" | Gyro Z (dps): "); Serial.print(sData.gyro_z_dps);
+  Serial.print(" | Distance (mm): "); Serial.print(sData.distance_mm);
+  Serial.print(" | BasePressure (hPa): "); Serial.print(basePressure);
+  Serial.print(" | Pressure (hPa): "); Serial.print(sData.pressure.pressure);
+  Serial.print(" | Altitude (cm): "); Serial.println((sData.pressure.pressure - basePressure) / PRESSURE_CHANGE_TO_ALTITUDE_CM);
 }
 
 /* ----- MOTOR CONTROL FUNCTIONS ----- */

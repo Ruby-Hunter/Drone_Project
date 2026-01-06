@@ -14,7 +14,7 @@
   #define MOTOR1 PA8
   #define MOTOR2 PA9
   #define MOTOR3 PA10
-  #define MOTOR4 PA11
+  #define MOTOR4 PA0
   #define LED_PIN PC13
   #define DRONE_POWER PB4
   #define I2C_SCL PB6
@@ -24,8 +24,9 @@
 
 const uint32_t MS_DELAY = 50;
 
+const float PRESSURE_CHANGE_TO_ALTITUDE_CM = 0.001f; // 1 hPa = 0.01 m altitude
 const float MOTION_THRESHOLD = 0.1f;  // in G's
-const float PRESSURE_THRESHOLD = 5.0f; // In hPa
+const float PRESSURE_THRESHOLD = 0.01f; // In hPa
 const uint8_t MOVEMENT_THRESHOLD = 10;
 const float TWO_GS_FORCE = 16384.0f;
 const float GYRO_DPS = 131.0f; // Divide raw data by this for Degrees Per Second (DPS)
