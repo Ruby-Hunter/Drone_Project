@@ -11,13 +11,13 @@ Servo sx, sy, sz, sdist, spres; // Saleae testing
 
 SensorData sData; // sensor data
 float basePressure, hoverPressure;
-float baseAltitude, altitude;
+float altitude;
 
 // For Sending to Saleae
 int16_t pwmx, pwmy, pwmz, pwmdist, pwmpres;
 
 // State Machine states
-enum State { OFF, INIT, HOVERING, FLYING, LANDING, TESTING };
+enum State { OFF, INIT, TAKEOFF, HOVERING, FLYING, LANDING, TESTING };
 uint8_t currentState = OFF;
 uint32_t lastTick = 0;
 int count = 0;
@@ -77,7 +77,14 @@ void stateMachine(){
       break;
 
     case INIT:
-      currentState = HOVERING;
+      Serial.println("Taking off");
+      currentState = TAKEOFF;
+      break;
+    
+    case TAKEOFF:
+      if(abs(altitude - TAKEOFF_HEIGHT_MM) <= ALTITUDE_THRESHOLD_CM){
+        currentState = HOVERING;
+      }
       break;
 
     case HOVERING:
@@ -118,7 +125,12 @@ void stateMachine(){
       basePressure = sData.pressure.pressure;
       hoverPressure = basePressure + 100*PRESSURE_CHANGE_TO_ALTITUDE_CM; // Set to hover to 1m above base
       takeOff();
+      break;
+    
+    case TAKEOFF:
       readPressure(sData);
+      altitude = sData.pressure.pressure - basePressure;
+      takeOff();
       break;
     
     case HOVERING:
