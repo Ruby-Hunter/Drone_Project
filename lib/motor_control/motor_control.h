@@ -16,7 +16,7 @@ void balancePitch(float accel_x_g, float gyro_x_dps); // Balances motors based o
 void balanceRoll(float accel_y_g, float gyro_y_dps); // Balances motors based on roll
 void balanceAltitude(float pressure, float hoverPressure); // Checks for changes in verticle position, adjusts all motors based on it
 
-void takeOff(); // Takeoff sequence
+void takeOff(int16_t distance_mm); // Takeoff sequence
 
 //TODO: Move land and forceLand over here from main
 // void land(); // Landing sequence

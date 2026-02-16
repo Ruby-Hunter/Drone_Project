@@ -119,16 +119,34 @@ void balanceRoll(float accel_y_g, float gyro_y_dps){
 void balanceAltitude(float pressure, float hoverPressure){
   //TODO: Derivative control of altitude balancing
 
-  /* Method 1: if it's falling, move it */
+  int16_t pressureError = hoverPressure - pressure;
   if(pressure < (hoverPressure - PRESSURE_THRESHOLD)){ // drone is falling
-    changeSpeed(3);
+    changeSpeed(map(pressureError, 
+                    0, hoverPressure + (ALTITUDE_THRESHOLD_MM*5)*PRESSURE_CHANGE_TO_ALTITUDE_MM, 
+                    1, MAX_CHANGE/2)); // Proportional control based on distance from target height
   }
   else if(pressure > (hoverPressure + PRESSURE_THRESHOLD)){ // drone is rising
-    changeSpeed(-3);
+    changeSpeed(map(pressureError, 
+                    -hoverPressure + (ALTITUDE_THRESHOLD_MM*5)*PRESSURE_CHANGE_TO_ALTITUDE_MM, 0, 
+                    -MAX_CHANGE/2, -1)); // Proportional control based on distance from target height
   }
 
   /* Method 2: Check exact altitude relative to ground */
 
+}
+
+void takeOff(int16_t distance_mm){
+  // Gradually increase speed based on distance from target height
+  static int16_t lastError = TAKEOFF_HEIGHT_MM;
+  uint16_t error = TAKEOFF_HEIGHT_MM - distance_mm;
+
+  // Proportional control based on distance from target height
+  int16_t change = TAKEOFF_SPEED * ((error)/TAKEOFF_HEIGHT_MM) + 2;
+  // Derivative control based on change in distance from target height
+  change += map(error - lastError, -TAKEOFF_HEIGHT_MM, TAKEOFF_HEIGHT_MM, -MAX_CHANGE, MAX_CHANGE);
+
+  lastError = error;
+  changeSpeed(change);
 }
 
 // void land(){
