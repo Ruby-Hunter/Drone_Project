@@ -69,7 +69,8 @@ void stateMachine(){
     count = 0;
   }
 
-  switch (currentState){ // State changes
+  /* ---------- State Changes ---------- */
+  switch (currentState){
     case OFF: 
       if(digitalRead(DRONE_POWER)){
         currentState = INIT;
@@ -88,7 +89,8 @@ void stateMachine(){
       break;
 
     case HOVERING:
-      if(sData.distance_mm < LANDING_DISTANCE_MM){
+      if(sData.distance_mm < LANDING_DISTANCE_MM || sData.pressure.pressure > TAKEOFF_HEIGHT_MM*2*PRESSURE_CHANGE_TO_ALTITUDE_MM + basePressure){ 
+        // If drone is close to ground, too high, or pressure sensor is malfunctioning, land
         currentState = LANDING;
       } 
       // else if(!isStable(msg)){
@@ -109,7 +111,8 @@ void stateMachine(){
       break;
   }
 
-  switch (currentState){ // State Actions
+  /* ---------- State Actions ---------- */
+  switch (currentState){ 
     case OFF:
       digitalWrite(LED_PIN, HIGH);
       stopMotors();
@@ -128,7 +131,10 @@ void stateMachine(){
     
     case TAKEOFF:
       readPressure(sData);
-      takeOff();
+      takeOff(sData.distance_mm);
+      balancePitch(sData.accel_x_g, sData.gyro_x_dps);
+      balanceRoll(sData.accel_y_g, sData.gyro_y_dps);
+      writeESCs();
       break;
     
     case HOVERING:
@@ -235,10 +241,6 @@ void sendReadings(){ // Send readings to Saleae
 }
 
 /* ----- MOTOR CONTROL FUNCTIONS ----- */
-void takeOff(){
-  changeSpeed(TAKEOFF_SPEED * ((TAKEOFF_HEIGHT_MM - sData.distance_mm)/TAKEOFF_HEIGHT_MM) + 1); // Gradually increase speed
-  // hehehehaw
-}
 
 void land(){ // Landing sequence
   readPressure(sData);
@@ -279,6 +281,7 @@ void rcISR(){
   moveY(msg.y_change);
   hoverPressure += msg.z_change;
 }
+
 /* ----- Testing Functions ----- */
 
 /* ----- Additional Functions -----*/
