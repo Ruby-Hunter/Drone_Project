@@ -48,19 +48,20 @@ void setup() {
   delay(1000);
 }
 
-void loop() {
-  if(millis() - lastTick >= MS_DELAY){
+void loop() { // Main loop runs every DELAY_MS ms
+  if(millis() - lastTick >= DELAY_MS){
     lastTick = millis();
     stateMachine();
     // Serial.println("Tick");
   }
 }
 
+// State machine for drone
 void stateMachine(){
   if(!digitalRead(DRONE_POWER)){ // Failsafe
     count++;
     if(count > 10){
-      if(currentState != OFF || currentState != TESTING){
+      if(currentState != OFF && currentState != TESTING){
         currentState = OFF;
         stopMotors();
       }
@@ -69,7 +70,7 @@ void stateMachine(){
     count = 0;
   }
 
-  /* ---------- State Changes ---------- */
+  /* ============ State Changes ============ */
   switch (currentState){
     case OFF: 
       if(digitalRead(DRONE_POWER)){
@@ -78,7 +79,7 @@ void stateMachine(){
       break;
 
     case INIT:
-      Serial.println("Taking off");
+      Serial.println("INIT");
       currentState = TAKEOFF;
       break;
     
@@ -111,7 +112,7 @@ void stateMachine(){
       break;
   }
 
-  /* ---------- State Actions ---------- */
+  /* ============ State Actions ============ */
   switch (currentState){ 
     case OFF:
       digitalWrite(LED_PIN, HIGH);
@@ -130,7 +131,10 @@ void stateMachine(){
       break;
     
     case TAKEOFF:
-      readPressure(sData);
+      Serial.println("Takeoff");
+      readValues(sData);
+      sendReadings();
+
       takeOff(sData.distance_mm);
       balancePitch(sData.accel_x_g, sData.gyro_x_dps);
       balanceRoll(sData.accel_y_g, sData.gyro_y_dps);
@@ -143,7 +147,8 @@ void stateMachine(){
 
       balancePitch(sData.accel_x_g, sData.gyro_x_dps);
       balanceRoll(sData.accel_y_g, sData.gyro_y_dps);
-      balanceAltitude(sData.pressure.pressure, hoverPressure);
+      // balanceAltitude(sData.pressure.pressure, hoverPressure);
+      balanceAltitudeLidar(sData.distance_mm);
 
       writeESCs();
       break;
@@ -162,18 +167,21 @@ void stateMachine(){
       break;
 
     case LANDING:
+      Serial.println("Landing Sequence");
       digitalWrite(LED_PIN, HIGH);
-      land();
+      forceLand();
+      Serial.println("Landed");
+      // land();
       stopMotors();
       fiveBlink();
       break;
     
-    case TESTING: // Just read values and send them to Saleae
+    case TESTING: // Just read values and print them
       digitalWrite(LED_PIN, HIGH);
       Serial.println("Testing Mode");
       readValues(sData);
       sendReadings();
-      delay(200);
+      delay(500);
       break;
   }
 }
@@ -264,14 +272,16 @@ void land(){ // Landing sequence
 
 void forceLand(){ // force the drone to land if pressure sensor isn't working
   while((getSpeed(1) + getSpeed(2) + getSpeed(3) + getSpeed(4)) > 4800) {
+    Serial.println("Lowering");
     changeSpeed(-1);
     writeESCs();
-    delay(80);
+    delay(DELAY_MS);
   }
+  Serial.println("--- Hit bottom ---");
   for (int pwm = 1150; pwm >= STOP_SPEED; pwm -= 5) {
     setSpeed(pwm);
     writeESCs();
-    delay(80);
+    delay(DELAY_MS);
   }
 }
 

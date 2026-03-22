@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include <Adafruit_DPS310.h>
+#include <Arduino.h>
 
 /* ----- Sensor Data Structure ----- */
 struct SensorData {

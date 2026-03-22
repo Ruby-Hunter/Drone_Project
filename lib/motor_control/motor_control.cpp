@@ -135,6 +135,16 @@ void balanceAltitude(float pressure, float hoverPressure){
 
 }
 
+void balanceAltitudeLidar(float height_mm){
+  int16_t height_diff_mm = height_mm - TAKEOFF_HEIGHT_MM;
+  if(height_mm > (TAKEOFF_HEIGHT_MM + ALTITUDE_THRESHOLD_MM)){
+    changeSpeed(map(height_diff_mm, 0, height_diff_mm*10, 1, 3));
+  }
+  else if(height_mm > (TAKEOFF_HEIGHT_MM + ALTITUDE_THRESHOLD_MM)){
+    changeSpeed(map(height_diff_mm, -height_diff_mm*10, 0, -3, -1));
+  }
+}
+
 void takeOff(int16_t distance_mm){
   // Gradually increase speed based on distance from target height
   static int16_t lastError = TAKEOFF_HEIGHT_MM;

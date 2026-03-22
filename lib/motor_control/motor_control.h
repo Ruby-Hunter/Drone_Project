@@ -15,6 +15,7 @@ void stopMotors(); // Sets all motors to 1000
 void balancePitch(float accel_x_g, float gyro_x_dps); // Balances motors based on pitch
 void balanceRoll(float accel_y_g, float gyro_y_dps); // Balances motors based on roll
 void balanceAltitude(float pressure, float hoverPressure); // Checks for changes in verticle position, adjusts all motors based on it
+void balanceAltitudeLidar(float height_mm);
 
 void takeOff(int16_t distance_mm); // Takeoff sequence
 

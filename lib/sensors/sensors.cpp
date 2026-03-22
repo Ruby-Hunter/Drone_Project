@@ -4,6 +4,7 @@
 #include "I2Cdev.h"
 #include "MPU6050.h"
 #include <Adafruit_VL53L1X.h>
+#include <Arduino.h>
 
 // sensor objects
 Adafruit_VL53L1X lidar;
@@ -22,8 +23,9 @@ static SensorFunc pressureFunc;
 
 /* ----- Hardware reading functions ----- */
 static void readGyroHW(SensorData& data){
-    mpu.getAcceleration(&ax, &ay, &az);
-    mpu.getRotation(&gx, &gy, &gz);
+    // x and y are switched because I put on the gyro sensor sideways
+    mpu.getAcceleration(&ay, &ax, &az);
+    mpu.getRotation(&gy, &gx, &gz);
 
     data.accel_x_g = ax / TWO_GS_FORCE;
     data.accel_y_g = ay / TWO_GS_FORCE;
@@ -35,7 +37,10 @@ static void readGyroHW(SensorData& data){
 
 static void readLidarHW(SensorData& data){
   if (lidar.dataReady()) {
-    data.distance_mm = lidar.distance(); // Distance in millimeters
+    if(lidar.distance() != -1){
+        data.distance_mm = lidar.distance(); // Distance in millimeters
+
+    }
     lidar.clearInterrupt(); // Reset data ready flag
   }
 }

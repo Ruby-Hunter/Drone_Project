@@ -11,21 +11,21 @@
   #define I2C_SCL 6
   #define I2C_SDA 7
 #else
-  #define MOTOR1 PA8
-  #define MOTOR2 PA9
-  #define MOTOR3 PA10
-  #define MOTOR4 PA0
+  #define MOTOR1 PA0
+  #define MOTOR2 PA8
+  #define MOTOR3 PA9
+  #define MOTOR4 PA10
   #define LED_PIN PC13
-  #define DRONE_POWER PB4
+  #define DRONE_POWER PA4
   #define I2C_SCL PB6
   #define I2C_SDA PB7
 #endif
 
 
-const uint32_t MS_DELAY = 50;
+const uint32_t DELAY_MS = 50;
 
 const float PRESSURE_CHANGE_TO_ALTITUDE_MM = 0.0001f; // 1 hPa = 0.01 m altitude
-const float ALTITUDE_THRESHOLD_MM = 50.0f; // in mm
+const float ALTITUDE_THRESHOLD_MM = 25.0f; // in mm
 const float MOTION_THRESHOLD = 0.1f;  // in G's
 const float PRESSURE_THRESHOLD = 0.01f; // In hPa
 const uint8_t MOVEMENT_THRESHOLD = 10;
@@ -46,5 +46,5 @@ const uint16_t MAX_HOVER_SPEED = 1550;
 const uint16_t MAX_SPEED = 1550;
 
 // Other constants
-const int16_t TAKEOFF_HEIGHT_MM = 1000; // Target height for takeoff in mm
-const int16_t LANDING_DISTANCE_MM = 40; // Distance from sensor that triggers landing sequence
+const int16_t TAKEOFF_HEIGHT_MM = 300; // Target height for takeoff in mm
+const int16_t LANDING_DISTANCE_MM = 60; // Distance from sensor that triggers landing sequence
