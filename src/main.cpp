@@ -7,8 +7,6 @@
 #include "sensors.h"
 #include "config.h"
 
-Servo sx, sy, sz, sdist, spres; // Saleae testing
-
 SensorData sData; // sensor data
 float basePressure, hoverPressure;
 float altitude;
@@ -79,7 +77,6 @@ void stateMachine(){
       break;
 
     case INIT:
-      Serial.println("INIT");
       currentState = TAKEOFF;
       break;
     
@@ -90,7 +87,7 @@ void stateMachine(){
       break;
 
     case HOVERING:
-      if(sData.distance_mm < LANDING_DISTANCE_MM || sData.pressure.pressure > TAKEOFF_HEIGHT_MM*2*PRESSURE_CHANGE_TO_ALTITUDE_MM + basePressure){ 
+      if(sData.distance_mm < LANDING_DISTANCE_MM || sData.pressure.pressure > TAKEOFF_HEIGHT_MM*3*PRESSURE_CHANGE_TO_ALTITUDE_MM + basePressure){ 
         // If drone is close to ground, too high, or pressure sensor is malfunctioning, land
         currentState = LANDING;
       } 
@@ -108,22 +105,24 @@ void stateMachine(){
       break;
     
     case LANDING:
-      currentState = TESTING;
+      if(getSpeed(1) == getSpeed(2) == getSpeed(3) == getSpeed(4) == STOP_SPEED){
+        currentState = TESTING;
+      }
       break;
   }
 
   /* ============ State Actions ============ */
   switch (currentState){ 
     case OFF:
+      Serial.println("Motors off");
       digitalWrite(LED_PIN, HIGH);
       stopMotors();
-      Serial.println("Motors off");
       break;
     
     case INIT:
       Serial.println("Starting up");
       fiveBlink();
-      delay(3000);  // Wait for ESCs to initialize
+      delay(STARTUP_TIME_MS);  // Wait for ESCs to initialize
 
       readPressure(sData);
       basePressure = sData.pressure.pressure;
@@ -142,6 +141,7 @@ void stateMachine(){
       break;
     
     case HOVERING:
+      Serial.println("Hovering");
       readValues(sData);
       sendReadings();
 
@@ -154,6 +154,7 @@ void stateMachine(){
       break;
     
     case FLYING:
+      Serial.println("Flying");
       readValues(sData);
       sendReadings();
 
@@ -169,19 +170,23 @@ void stateMachine(){
     case LANDING:
       Serial.println("Landing Sequence");
       digitalWrite(LED_PIN, HIGH);
+      readValues(sData);
+      sendReadings();
+
       forceLand();
-      Serial.println("Landed");
+      balancePitch(sData.accel_x_g, sData.gyro_x_dps);
+      balanceRoll(sData.accel_y_g, sData.gyro_y_dps);
       // land();
-      stopMotors();
-      fiveBlink();
       break;
     
     case TESTING: // Just read values and print them
-      digitalWrite(LED_PIN, HIGH);
       Serial.println("Testing Mode");
+      digitalWrite(LED_PIN, HIGH);
+      stopMotors();
+
       readValues(sData);
       sendReadings();
-      delay(500);
+      delay(500 - DELAY_MS);
       break;
   }
 }
@@ -195,16 +200,8 @@ void setupPins(){
 
 void setupServos(){
   motor_init();
-  
-  // sx.attach(PA0);
-  // sy.attach(PA1);
-  // sz.attach(PA2);
-  // sdist.attach(PA3);
-  // spres.attach(PA6);
   Serial.println("Servos initialized");
 }
-
-
 
 void setupRC(){
   remote_control_init(&msg);
@@ -225,17 +222,6 @@ void setupSerial(){
 /* ----- SENSOR READING FUNCTIONS ----- */
 void sendReadings(){ // Send readings to Saleae
   // Reading on Saleae
-  // pwmx = 1500 + (sData.accel_x_g * 500);  // -1g → 1000, 0g → 1500, +1g → 2000
-  // pwmy = 1500 + (sData.accel_y_g * 500);
-  // pwmz = 1000 + (sData.accel_z_g * 500);
-  // pwmdist = 1000 + (sData.distance_mm/4);
-  // pwmpres = sData.pressure.pressure + 200; // 857.81
-
-  // sx.writeMicroseconds(pwmx);
-  // sy.writeMicroseconds(pwmy);
-  // sz.writeMicroseconds(pwmz);
-  // sdist.writeMicroseconds(pwmdist);
-  // spres.writeMicroseconds(pwmpres);
   Serial.print("Accel X (g): "); Serial.print(sData.accel_x_g);
   Serial.print(" | Accel Y (g): "); Serial.print(sData.accel_y_g);
   Serial.print(" | Accel Z (g): "); Serial.print(sData.accel_z_g);
@@ -271,17 +257,22 @@ void land(){ // Landing sequence
 }
 
 void forceLand(){ // force the drone to land if pressure sensor isn't working
-  while((getSpeed(1) + getSpeed(2) + getSpeed(3) + getSpeed(4)) > 4800) {
-    Serial.println("Lowering");
+  static uint16_t pwm = 1200;
+  if((getSpeed(1) + getSpeed(2) + getSpeed(3) + getSpeed(4)) > 4800) {
     changeSpeed(-1);
     writeESCs();
-    delay(DELAY_MS);
   }
-  Serial.println("--- Hit bottom ---");
-  for (int pwm = 1150; pwm >= STOP_SPEED; pwm -= 5) {
+  else {
+    if(pwm == 1200) Serial.println("--- Hit bottom ---"); // debug
     setSpeed(pwm);
     writeESCs();
-    delay(DELAY_MS);
+    if(pwm > STOP_SPEED){
+      pwm -= 5;
+    } else {
+      Serial.println("Landed");
+      stopMotors();
+      fiveBlink();
+    }
   }
 }
 

@@ -23,6 +23,7 @@
 
 
 const uint32_t DELAY_MS = 50;
+const uint32_t STARTUP_TIME_MS = 3000;
 
 const float PRESSURE_CHANGE_TO_ALTITUDE_MM = 0.0001f; // 1 hPa = 0.01 m altitude
 const float ALTITUDE_THRESHOLD_MM = 25.0f; // in mm
