@@ -22,7 +22,7 @@ static SensorFunc lidarFunc;
 static SensorFunc pressureFunc;
 
 /* ----- Hardware reading functions ----- */
-static void readGyroHW(SensorData& data){
+static void readGyroHW(SensorData& data){ //TODO: Add filters
     // x and y are switched because I put on the gyro sensor sideways
     mpu.getAcceleration(&ay, &ax, &az);
     mpu.getRotation(&gy, &gx, &gz);
@@ -45,7 +45,7 @@ static void readLidarHW(SensorData& data){
   }
 }
 
-static void readPressureHW(SensorData& data){
+static void readPressureHW(SensorData& data){ //TODO: filter
   dps.getEvents(&temp, &pressure);
   data.pressure = pressure;
 }

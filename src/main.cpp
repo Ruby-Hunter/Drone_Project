@@ -259,7 +259,7 @@ void land(){ // Landing sequence
 void forceLand(){ // force the drone to land if pressure sensor isn't working
   static uint16_t pwm = 1200;
   if((getSpeed(1) + getSpeed(2) + getSpeed(3) + getSpeed(4)) > 4800) {
-    changeSpeed(-1);
+    changeSpeed(-3);
     writeESCs();
   }
   else {
@@ -267,7 +267,7 @@ void forceLand(){ // force the drone to land if pressure sensor isn't working
     setSpeed(pwm);
     writeESCs();
     if(pwm > STOP_SPEED){
-      pwm -= 5;
+      pwm -= 6;
     } else {
       Serial.println("Landed");
       stopMotors();
