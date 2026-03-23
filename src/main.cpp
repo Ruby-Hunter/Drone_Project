@@ -105,7 +105,7 @@ void stateMachine(){
       break;
     
     case LANDING:
-      if(getSpeed(1) == getSpeed(2) == getSpeed(3) == getSpeed(4) == STOP_SPEED){
+      if(motorSpeedsEqual(STOP_SPEED)){
         currentState = TESTING;
       }
       break;

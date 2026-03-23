@@ -177,3 +177,7 @@ uint16_t getSpeed(int motorChoice){
       return motor_4_Speed;
   }
 }
+
+bool motorSpeedsEqual(uint16_t speed) {
+  return getSpeed(1) == getSpeed(2) == getSpeed(3) == getSpeed(4) == speed;
+}
