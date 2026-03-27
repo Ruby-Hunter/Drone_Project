@@ -22,24 +22,32 @@ static SensorFunc lidarFunc;
 static SensorFunc pressureFunc;
 
 /* ----- Hardware reading functions ----- */
-static void readGyroHW(SensorData& data){ //TODO: Add filters
+static void readGyroHW(SensorData& data){
     // x and y are switched because I put on the gyro sensor sideways
     mpu.getAcceleration(&ay, &ax, &az);
     mpu.getRotation(&gy, &gx, &gz);
 
-    data.accel_x_g = ax / TWO_GS_FORCE;
-    data.accel_y_g = ay / TWO_GS_FORCE;
-    data.accel_z_g = az / TWO_GS_FORCE;
-    data.gyro_x_dps = gx / GYRO_DPS;
-    data.gyro_y_dps = gy / GYRO_DPS;
-    data.gyro_z_dps = gz / GYRO_DPS;
+    // Accelerometer Range: [-2, 2]. If it passes low pass filter, 
+    float ax_g = ax / TWO_GS_FORCE;
+    float ay_g = ay / TWO_GS_FORCE;
+    float az_g = az / TWO_GS_FORCE;
+    if(lowPassFilter(data.accel_x_g, ax_g, ACCEL_LP_MAX_G)){ data.accel_x_g = alphaFilter(data.accel_x_g, ax_g); }
+    if(lowPassFilter(data.accel_y_g, ay_g, ACCEL_LP_MAX_G)){ data.accel_y_g = alphaFilter(data.accel_y_g, ay_g); }
+    if(lowPassFilter(data.accel_z_g, az_g, ACCEL_LP_MAX_G)){ data.accel_z_g = alphaFilter(data.accel_z_g, az_g); }
+
+    // Gyro Range: [-180, 180]
+    float gx_dps = gx / GYRO_DPS;
+    float gy_dps = gy / GYRO_DPS;
+    float gz_dps = gz / GYRO_DPS;
+    if(lowPassFilter(data.gyro_x_dps, gx_dps, GYRO_LP_MAX_DPS)){ data.gyro_x_dps = alphaFilter(data.gyro_x_dps, gx_dps); }
+    if(lowPassFilter(data.gyro_y_dps, gy_dps, GYRO_LP_MAX_DPS)){ data.gyro_y_dps = alphaFilter(data.gyro_y_dps, gy_dps); }
+    if(lowPassFilter(data.gyro_z_dps, gz_dps, GYRO_LP_MAX_DPS)){ data.gyro_z_dps = alphaFilter(data.gyro_z_dps, gz_dps); }
 }
 
 static void readLidarHW(SensorData& data){
   if (lidar.dataReady()) {
     if(lidar.distance() != -1){
-        data.distance_mm = lidar.distance(); // Distance in millimeters
-
+        data.distance_mm = alphaFilter(data.distance_mm, lidar.distance()); // Distance in millimeters
     }
     lidar.clearInterrupt(); // Reset data ready flag
   }
@@ -48,6 +56,16 @@ static void readLidarHW(SensorData& data){
 static void readPressureHW(SensorData& data){ //TODO: filter
   dps.getEvents(&temp, &pressure);
   data.pressure = pressure;
+}
+
+template <typename T>
+static T alphaFilter(T lastVal, T curVal){
+    return (ALPHA * curVal) + ((1-ALPHA) * lastVal);
+}
+
+template <typename T>
+static bool lowPassFilter(T lastVal, T curVal, T max){
+    return abs(curVal - lastVal) < max;
 }
 
 /* ----- Sensor Setup and Reading Functions ----- */

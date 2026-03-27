@@ -34,7 +34,12 @@ const float TWO_GS_FORCE = 16384.0f;
 const float GYRO_DPS = 131.0f; // Divide raw data by this for Degrees Per Second (DPS)
 
 // PID Constants
-const long MAX_CHANGE = 8;
+const long MAX_PWM_CHANGE = 6;
+
+// Sensor Constants
+const float ALPHA = 0.5;
+const float ACCEL_LP_MAX_G = 0.3; // LP = Low Pass
+const float GYRO_LP_MAX_DPS = 30; // LP = Low Pass
 
 // Take off Constants
 const long TAKEOFF_SPEED = 8;

@@ -5,9 +5,13 @@
 
 /* ----- Sensor Data Structure ----- */
 struct SensorData {
-    float accel_x_g, accel_y_g, accel_z_g;
-    float gyro_x_dps, gyro_y_dps, gyro_z_dps;
-    int16_t distance_mm;
+    float accel_x_g = 0;
+    float accel_y_g = 0;
+    float accel_z_g = 1;
+    float gyro_x_dps = 0;
+    float gyro_y_dps = 0;
+    float gyro_z_dps = 0;
+    int16_t distance_mm = 90;
     sensors_event_t pressure;
 };
 
