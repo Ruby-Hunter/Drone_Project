@@ -183,7 +183,7 @@ void stateMachine(){
       Serial.println("Testing Mode");
       digitalWrite(LED_PIN, HIGH);
       stopMotors();
-
+      writeESCs(); // write motor speeds
       readValues(sData);
       sendReadings();
       delay(500 - DELAY_MS);

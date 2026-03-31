@@ -38,7 +38,7 @@ const long MAX_PWM_CHANGE = 6;
 
 // Sensor Constants
 const float ALPHA = 0.5;
-const float ACCEL_LP_MAX_G = 0.3; // LP = Low Pass
+const float ACCEL_LP_MAX_G = 0.5; // LP = Low Pass
 const float GYRO_LP_MAX_DPS = 30; // LP = Low Pass
 
 // Take off Constants
@@ -46,10 +46,10 @@ const long TAKEOFF_SPEED = 8;
 
 // Motor speed constants (in microseconds)
 const uint16_t STOP_SPEED = 1000;
-const uint16_t START_SPEED = 1320;
-const uint16_t RISING_HOVER_SPEED = 1360;
-const uint16_t MAX_HOVER_SPEED = 1550;
-const uint16_t MAX_SPEED = 1550;
+const uint16_t START_SPEED = 1320; //unused
+const uint16_t RISING_HOVER_SPEED = 1360;//unused
+const uint16_t MAX_HOVER_SPEED = 1200;//unused
+const uint16_t MAX_SPEED = 1200;
 
 // Other constants
 const int16_t TAKEOFF_HEIGHT_MM = 300; // Target height for takeoff in mm

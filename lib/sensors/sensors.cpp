@@ -21,6 +21,16 @@ static SensorFunc gyroFunc;
 static SensorFunc lidarFunc;
 static SensorFunc pressureFunc;
 
+template <typename T>
+static T alphaFilter(T lastVal, T curVal){
+    return (ALPHA * curVal) + ((1-ALPHA) * lastVal);
+}
+
+template <typename T>
+static bool lowPassFilter(T lastVal, T curVal, T max){
+    return abs(curVal - lastVal) < max;
+}
+
 /* ----- Hardware reading functions ----- */
 static void readGyroHW(SensorData& data){
     // x and y are switched because I put on the gyro sensor sideways
@@ -58,15 +68,6 @@ static void readPressureHW(SensorData& data){ //TODO: filter
   data.pressure = pressure;
 }
 
-template <typename T>
-static T alphaFilter(T lastVal, T curVal){
-    return (ALPHA * curVal) + ((1-ALPHA) * lastVal);
-}
-
-template <typename T>
-static bool lowPassFilter(T lastVal, T curVal, T max){
-    return abs(curVal - lastVal) < max;
-}
 
 /* ----- Sensor Setup and Reading Functions ----- */
 void setupSensors(){
