@@ -19,6 +19,8 @@ void balanceAltitudeLidar(float height_mm); // Balances altitude based off of li
 
 void takeOff(int16_t distance_mm); // Takeoff sequence
 
+void printSpeeds(); // Prints out current motor speeds
+
 //TODO: Move land and forceLand over here from main
 // void land(); // Landing sequence
 // void forceLand(); // Force the drone to land if pressure sensor isn't working

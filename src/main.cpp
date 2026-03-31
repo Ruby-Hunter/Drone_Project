@@ -114,13 +114,13 @@ void stateMachine(){
   /* ============ State Actions ============ */
   switch (currentState){ 
     case OFF:
-      Serial.println("Motors off");
+      Serial.println("--- Motors off ---");
       digitalWrite(LED_PIN, HIGH);
       stopMotors();
       break;
     
     case INIT:
-      Serial.println("Starting up");
+      Serial.println("--- Starting up ---");
       fiveBlink();
       delay(STARTUP_TIME_MS);  // Wait for ESCs to initialize
 
@@ -130,7 +130,7 @@ void stateMachine(){
       break;
     
     case TAKEOFF:
-      Serial.println("Takeoff");
+      Serial.println("--- Takeoff ---");
       readValues(sData);
       sendReadings();
 
@@ -141,7 +141,7 @@ void stateMachine(){
       break;
     
     case HOVERING:
-      Serial.println("Hovering");
+      Serial.println("--- Hovering ---");
       readValues(sData);
       sendReadings();
 
@@ -154,7 +154,7 @@ void stateMachine(){
       break;
     
     case FLYING:
-      Serial.println("Flying");
+      Serial.println("--- Flying ---");
       readValues(sData);
       sendReadings();
 
@@ -168,7 +168,7 @@ void stateMachine(){
       break;
 
     case LANDING:
-      Serial.println("Landing Sequence");
+      Serial.println("--- Landing Sequence ---");
       digitalWrite(LED_PIN, HIGH);
       readValues(sData);
       sendReadings();
@@ -180,7 +180,7 @@ void stateMachine(){
       break;
     
     case TESTING: // Just read values and print them
-      Serial.println("Testing Mode");
+      Serial.println("--- Testing ---");
       digitalWrite(LED_PIN, HIGH);
       stopMotors();
       writeESCs(); // write motor speeds
@@ -222,6 +222,7 @@ void setupSerial(){
 /* ----- SENSOR READING FUNCTIONS ----- */
 void sendReadings(){ // Send readings to Saleae
   // Reading on Saleae
+  printSpeeds();
   Serial.print("Accel X (g): "); Serial.print(sData.accel_x_g);
   Serial.print(" | Accel Y (g): "); Serial.print(sData.accel_y_g);
   Serial.print(" | Accel Z (g): "); Serial.print(sData.accel_z_g);
