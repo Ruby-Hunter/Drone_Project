@@ -1,5 +1,7 @@
 #include "motor_control.h"
 #include "config.h"
+#include "utils.h"
+#include "sensors.h"
 #include <Servo.h>
 #include <Arduino.h>
 #include <cmath>
@@ -85,71 +87,86 @@ void stopMotors(){
   writeESCs();
 }
 
-void balancePitch(float accel_x_g, float gyro_x_dps){
-  if(accel_x_g > (0 + MOTION_THRESHOLD)){ // if it pitches too far forwards, increase front motor speeds
-    int8_t change = map(accel_x_g, -1, 1, -MAX_PWM_CHANGE, MAX_PWM_CHANGE);
-    int8_t gyroEffect = map(gyro_x_dps, -60, 60, -1, 2); // Gyroeffect helps dampen wobbles
-    change *= gyroEffect;
-    motor_1_Speed += 1 + change;
-    motor_2_Speed += 1 + change;
+void balancePitch(SensorDataHistory sHistory){
+  // TODO: Tune PID constants, set desired value to variable
+  float pitch = sHistory.accel_x_g[sHistory.index];
+  pitch = constrain(pitch, -1.5, 1.5); // Limit pitch to prevent extreme motor changes
+  if(pitch > (0 + MOTION_THRESHOLD)){ // if it pitches too far forwards, increase front motor speeds
+    proportional(motor_1_Speed, pitch, 0, P_PITCH, 1);
+    proportional(motor_2_Speed, pitch, 0, P_PITCH, 1);
+    integral(motor_1_Speed, sHistory.accel_x_g, 0, I_PITCH, 0);
+    integral(motor_2_Speed, sHistory.accel_x_g, 0, I_PITCH, 0);
+    derivative(motor_1_Speed, pitch, sHistory.accel_x_g[sHistory.prev_index], D_PITCH, 0);
+    derivative(motor_2_Speed, pitch, sHistory.accel_x_g[sHistory.prev_index], D_PITCH, 0);
   }
-  else if(accel_x_g < (0 - MOTION_THRESHOLD)){ // pitch too far backwards, increase back motor speeds
-    int8_t change = map(-accel_x_g, -1, 1, -MAX_PWM_CHANGE, MAX_PWM_CHANGE); // accel_x_g is negative here
-    int8_t gyroEffect = map(-gyro_x_dps, -60, 60, -1, 2);
-    change *= gyroEffect;
-    motor_3_Speed += 1 + change;
-    motor_4_Speed += 1 + change;
-  }
-}
-
-void balanceRoll(float accel_y_g, float gyro_y_dps){
-  if(accel_y_g > (0 + MOTION_THRESHOLD)){
-    int8_t change = map(accel_y_g, -1, 1, -MAX_PWM_CHANGE, MAX_PWM_CHANGE);
-    int8_t gyroEffect = map(gyro_y_dps, -60, 60, -1, 2);
-    change *= gyroEffect;
-    motor_2_Speed += 1 + change;
-    motor_3_Speed += 1 + change;
-    // if (motor_2_Speed >= MAX_HOVER_SPEED || motor_3_Speed >= MAX_HOVER_SPEED){
-    //   motor_1_Speed -= 1 + change;
-    //   motor_4_Speed -= 1 + change;
-    // }
-  }
-  else if(accel_y_g < (0 - MOTION_THRESHOLD)){
-    int8_t change = map(-accel_y_g, -1, 1, -MAX_PWM_CHANGE, MAX_PWM_CHANGE);
-    int8_t gyroEffect = map(-gyro_y_dps, -60, 60, -1, 2);
-    change *= gyroEffect;
-    motor_1_Speed += 1 + change;
-    motor_4_Speed += 1 + change;
+  else if(pitch < (0 - MOTION_THRESHOLD)){ // pitch too far backwards, increase back motor speeds
+    proportional(motor_3_Speed, pitch, 0, P_PITCH, 1);
+    proportional(motor_4_Speed, pitch, 0, P_PITCH, 1);
+    integral(motor_3_Speed, sHistory.accel_x_g, 0, I_PITCH, 0);
+    integral(motor_4_Speed, sHistory.accel_x_g, 0, I_PITCH, 0);
+    derivative(motor_3_Speed, pitch, sHistory.accel_x_g[sHistory.prev_index], D_PITCH, 0);
+    derivative(motor_4_Speed, pitch, sHistory.accel_x_g[sHistory.prev_index], D_PITCH, 0);
   }
 }
 
-void balanceAltitude(float pressure, float hoverPressure){
-  //TODO: Derivative control of altitude balancing
+void balanceRoll(SensorDataHistory sHistory){
+  // TODO: Tune PID constants, set desired value to variable
+  float roll = sHistory.accel_y_g[sHistory.index];
+  roll = constrain(roll, -1.5, 1.5); // Limit roll to prevent extreme motor changes
+  if(roll > (0 + MOTION_THRESHOLD)){ // if it rolls too far right, increase right (2, 3) motor speeds
+    proportional(motor_2_Speed, roll, 0, P_ROLL, 1);
+    proportional(motor_3_Speed, roll, 0, P_ROLL, 1);
+    integral(motor_2_Speed, sHistory.accel_y_g, 0, I_ROLL, 0);
+    integral(motor_3_Speed, sHistory.accel_y_g, 0, I_ROLL, 0);
+    derivative(motor_2_Speed, roll, sHistory.accel_y_g[sHistory.prev_index], D_ROLL, 0);
+    derivative(motor_3_Speed, roll, sHistory.accel_y_g[sHistory.prev_index], D_ROLL, 0);
+  }
+  else if(roll < (0 - MOTION_THRESHOLD)){ // roll too far left, increase left (1, 4) motor speeds
+    proportional(motor_1_Speed, roll, 0, P_ROLL, 1);
+    proportional(motor_4_Speed, roll, 0, P_ROLL, 1);
+    integral(motor_1_Speed, sHistory.accel_y_g, 0, I_ROLL, 0);
+    integral(motor_4_Speed, sHistory.accel_y_g, 0, I_ROLL, 0);
+    derivative(motor_1_Speed, roll, sHistory.accel_y_g[sHistory.prev_index], D_ROLL, 0);
+    derivative(motor_4_Speed, roll, sHistory.accel_y_g[sHistory.prev_index], D_ROLL, 0);
+  }
+}
 
-  int16_t pressureError = hoverPressure - pressure;
-  if(pressure < (hoverPressure - PRESSURE_THRESHOLD)){ // drone is falling
-    changeSpeed(map(pressureError, 
-                    0, hoverPressure + (ALTITUDE_THRESHOLD_MM*5)*PRESSURE_CHANGE_TO_ALTITUDE_MM, 
-                    1, MAX_PWM_CHANGE/2)); // Proportional control based on distance from target height
-  }
-  else if(pressure > (hoverPressure + PRESSURE_THRESHOLD)){ // drone is rising
-    changeSpeed(map(pressureError, 
-                    -hoverPressure + (ALTITUDE_THRESHOLD_MM*5)*PRESSURE_CHANGE_TO_ALTITUDE_MM, 0, 
-                    -MAX_PWM_CHANGE/2, -1)); // Proportional control based on distance from target height
-  }
+void balanceAltitude(SensorDataHistory sHistory, float hoverPressure){
+  // TODO: Tune PID constants, set desired value to variable
+  proportional(motor_1_Speed, sHistory.pressure[sHistory.index].pressure, hoverPressure, P_ALTITUDE, 1);
+  // int16_t pressureError = hoverPressure - pressure;
+  // if(pressure < (hoverPressure - PRESSURE_THRESHOLD_HPA)){ // drone is falling
+  //   changeSpeed(map(pressureError, 
+  //                   0, hoverPressure + (ALTITUDE_THRESHOLD_MM*5)*PRESSURE_CHANGE_TO_ALTITUDE_MM, 
+  //                   1, MAX_PWM_CHANGE/2)); // Proportional control based on distance from target height
+  // }
+  // else if(pressure > (hoverPressure + PRESSURE_THRESHOLD_HPA)){ // drone is rising
+  //   changeSpeed(map(pressureError, 
+  //                   -hoverPressure + (ALTITUDE_THRESHOLD_MM*5)*PRESSURE_CHANGE_TO_ALTITUDE_MM, 0, 
+  //                   -MAX_PWM_CHANGE/2, -1)); // Proportional control based on distance from target height
+  // }
 
   /* Method 2: Check exact altitude relative to ground */
 
 }
 
-void balanceAltitudeLidar(float height_mm){
-  int16_t height_diff_mm = height_mm - TAKEOFF_HEIGHT_MM;
-  if(height_mm > (TAKEOFF_HEIGHT_MM + ALTITUDE_THRESHOLD_MM)){
-    changeSpeed(map(height_diff_mm, 0, height_diff_mm*10, 1, 3));
-  }
-  else if(height_mm > (TAKEOFF_HEIGHT_MM + ALTITUDE_THRESHOLD_MM)){
-    changeSpeed(map(height_diff_mm, -height_diff_mm*10, 0, -3, -1));
-  }
+void balanceAltitudeLidar(SensorDataHistory sHistory, int16_t desiredHeight_mm){
+  // TODO: Tune PID constants, set desired value to variable
+  uint16_t lidar_distance_mm = sHistory.lidar_distance_mm[sHistory.index];
+  uint16_t speed_change = 0;
+  proportional(speed_change, lidar_distance_mm, desiredHeight_mm, P_ALTITUDE, 1);
+  integral(speed_change, sHistory.lidar_distance_mm, 0, I_ALTITUDE, 0);
+  derivative(speed_change, lidar_distance_mm, sHistory.lidar_distance_mm[sHistory.prev_index], D_ALTITUDE, 0);
+  changeSpeed(speed_change);
+  
+  // int16_t height_diff_mm = sHistory.lidar_distance_mm[sHistory.index] - desiredHeight_mm;
+
+  // if(sHistory.lidar_distance_mm[sHistory.index] < (desiredHeight_mm - ALTITUDE_THRESHOLD_MM)){
+  //   changeSpeed(map(height_diff_mm, 0, height_diff_mm*10, 1, 3));
+  // }
+  // else if(sHistory.lidar_distance_mm[sHistory.index] > (desiredHeight_mm + ALTITUDE_THRESHOLD_MM)){
+  //   changeSpeed(map(height_diff_mm, -height_diff_mm*10, 0, -3, -1));
+  // }
 }
 
 void takeOff(int16_t distance_mm){

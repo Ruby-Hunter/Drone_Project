@@ -12,10 +12,10 @@ void moveZ(int8_t z_movement); // Moves the drone up/down z_movement distance
 void writeESCs(); // Writes new PWM values to motors
 void stopMotors(); // Sets all motors to 1000
 
-void balancePitch(float accel_x_g, float gyro_x_dps); // Balances motors based on pitch
-void balanceRoll(float accel_y_g, float gyro_y_dps); // Balances motors based on roll
-void balanceAltitude(float pressure, float hoverPressure); // Checks for changes in pressure, adjusts all motors based on it
-void balanceAltitudeLidar(float height_mm); // Balances altitude based off of lidar sensor
+void balancePitch(SensorDataHistory sHistory); // Balances motors based on pitch
+void balanceRoll(SensorDataHistory sHistory); // Balances motors based on roll
+void balanceAltitude(SensorDataHistory sHistory, float hoverPressure); // Checks for changes in pressure, adjusts all motors based on it
+void balanceAltitudeLidar(SensorDataHistory sHistory, int16_t desiredHeight_mm); // Balances altitude based off of lidar sensor
 
 void takeOff(int16_t distance_mm); // Takeoff sequence
 

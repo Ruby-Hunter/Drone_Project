@@ -37,7 +37,7 @@ static void readGyroHW(SensorData& data){
     mpu.getAcceleration(&ay, &ax, &az);
     mpu.getRotation(&gy, &gx, &gz);
 
-    // Accelerometer Range: [-2, 2]. If it passes low pass filter, 
+    // Accelerometer Range: [-2, 2]. If it passes low pass filter, apply alpha filter and update data
     float ax_g = ax / TWO_GS_FORCE;
     float ay_g = ay / TWO_GS_FORCE;
     float az_g = az / TWO_GS_FORCE;
@@ -57,7 +57,7 @@ static void readGyroHW(SensorData& data){
 static void readLidarHW(SensorData& data){
   if (lidar.dataReady()) {
     if(lidar.distance() != -1){
-        data.distance_mm = alphaFilter(data.distance_mm, lidar.distance()); // Distance in millimeters
+        data.lidar_distance_mm = alphaFilter(data.lidar_distance_mm, lidar.distance()); // Distance in millimeters
     }
     lidar.clearInterrupt(); // Reset data ready flag
   }
@@ -119,10 +119,27 @@ void readPressure(SensorData& data){
     }
 }
 
-void readValues(SensorData& data){
+void readSensors(SensorData& data){
     readGyro(data);
     readLidar(data);
     readPressure(data);
+}
+
+void advanceIndex(SensorDataHistory& history){
+    history.prev_index = history.index;
+    history.index = (history.index + 1) % NUM_DATA_VALS;
+}
+
+void updateHistory(SensorDataHistory& history, SensorData& data){
+    uint8_t idx = history.index;
+    history.accel_x_g[idx] = data.accel_x_g;
+    history.accel_y_g[idx] = data.accel_y_g;
+    history.accel_z_g[idx] = data.accel_z_g;
+    history.gyro_x_dps[idx] = data.gyro_x_dps;
+    history.gyro_y_dps[idx] = data.gyro_y_dps;
+    history.gyro_z_dps[idx] = data.gyro_z_dps;
+    history.lidar_distance_mm[idx] = data.lidar_distance_mm;
+    history.pressure[idx] = data.pressure;
 }
 
 void setGyroFunc(SensorFunc func) {

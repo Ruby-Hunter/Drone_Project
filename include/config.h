@@ -25,16 +25,36 @@
 const uint32_t DELAY_MS = 50;
 const uint32_t STARTUP_TIME_MS = 3000;
 
-const float PRESSURE_CHANGE_TO_ALTITUDE_MM = 0.0001f; // 1 hPa = 0.01 m altitude
-const float ALTITUDE_THRESHOLD_MM = 25.0f; // in mm
-const float MOTION_THRESHOLD = 0.1f;  // in G's
-const float PRESSURE_THRESHOLD = 0.01f; // In hPa
-const uint8_t MOVEMENT_THRESHOLD = 10;
+// Conversion factors
 const float TWO_GS_FORCE = 16384.0f;
 const float GYRO_DPS = 131.0f; // Divide raw data by this for Degrees Per Second (DPS)
+const float PRESSURE_CHANGE_TO_ALTITUDE_MM = 0.0001f; // 1 hPa = 0.01 m altitude
+
+// Thresholds
+const float ALTITUDE_THRESHOLD_MM = 25.0f; // in mm
+const float MOTION_THRESHOLD = 0.1f;  // in G's
+const float PRESSURE_THRESHOLD_HPA = 0.01f; // In hPa
+const uint8_t MOVEMENT_THRESHOLD = 10;
 
 // PID Constants
 const long MAX_PWM_CHANGE = 6;
+const uint8_t NUM_DATA_VALS = 5; // How many past sensor vals stored for I term
+
+const uint8_t P_PITCH = 5;
+const uint8_t I_PITCH = 3;
+const uint8_t D_PITCH = 2;
+
+const uint8_t P_ROLL = 5;
+const uint8_t I_ROLL = 3;
+const uint8_t D_ROLL = 2;
+
+const uint8_t P_ALTITUDE = 5;
+const uint8_t I_ALTITUDE = 3;
+const uint8_t D_ALTITUDE = 2;
+
+const uint8_t P_YAW = 5;
+const uint8_t I_YAW = 3;
+const uint8_t D_YAW = 2;
 
 // Sensor Constants
 const float ALPHA = 0.5;
@@ -54,3 +74,6 @@ const uint16_t MAX_SPEED = 1200;
 // Other constants
 const int16_t TAKEOFF_HEIGHT_MM = 300; // Target height for takeoff in mm
 const int16_t LANDING_DISTANCE_MM = 60; // Distance from sensor that triggers landing sequence
+
+// When the drone goes above this height, initiate landing sequence
+const float HEIGHT_LIMIT_HPA = TAKEOFF_HEIGHT_MM*3*PRESSURE_CHANGE_TO_ALTITUDE_MM;

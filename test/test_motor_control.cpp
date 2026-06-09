@@ -4,6 +4,7 @@
 #include "motor_control.h"
 #include "config.h"
 #include "test_motor_control.h"
+#include "sensors.h"
 
 static void assert_all_motors(uint16_t speed, bool equal = true){ // Helper function for tests
     for(int i = 0; i < 4; i++){
