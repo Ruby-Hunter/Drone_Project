@@ -66,10 +66,10 @@ const long TAKEOFF_SPEED = 8;
 
 // Motor speed constants (in microseconds)
 const uint16_t STOP_SPEED = 1000;
-const uint16_t START_SPEED = 1320; //unused
+const uint16_t START_SPEED = 1150;
 const uint16_t RISING_HOVER_SPEED = 1360;//unused
 const uint16_t MAX_HOVER_SPEED = 1200;//unused
-const uint16_t MAX_SPEED = 1200;
+const uint16_t MAX_SPEED = 1250;
 
 // Other constants
 const int16_t TAKEOFF_HEIGHT_MM = 300; // Target height for takeoff in mm

@@ -41,6 +41,8 @@ void readGyro(SensorData& data); // Read from Gyro
 void readLidar(SensorData& data); // Read from Lidar TOF sensor
 void readPressure(SensorData& data); // Read from pressure sensor
 
+bool readingsStable(SensorData data); // Returns true if readings are stable enough for takeoff
+
 /* ----- Sensor function selection for testing ----- */
 using SensorFunc = void(*)(SensorData& data);
 void setGyroFunc(SensorFunc);

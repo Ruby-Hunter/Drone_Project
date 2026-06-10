@@ -24,10 +24,11 @@ float altitude;
 int16_t pwmx, pwmy, pwmz, pwmdist, pwmpres;
 
 // State Machine states
-enum State { OFF, INIT, TAKEOFF, HOVERING, FLYING, LANDING, TESTING };
+enum State { OFF, INIT, STARTING, TAKEOFF, HOVERING, FLYING, LANDING, TESTING };
 uint8_t currentState = OFF;
 uint32_t lastTick = 0;
-int count = 0;
+uint8_t power_off_count = 0; // If read 10 consecutive power offs, switch to OFF state
+uint8_t takeoff_count = 0; // If sensors are stable 10x, initiate takeoff
 
 msgData msg;
 
@@ -102,15 +103,15 @@ void setupSerial(){
 /* ----- STATE MACHINE FUNCTIONS ----- */
 void stateMachine(){ // State machine for drone
   if(!digitalRead(DRONE_POWER)){ // Failsafe
-    count++;
-    if(count > 10){
+    power_off_count++;
+    if(power_off_count > 10){
       if(currentState != OFF && currentState != TESTING){
         currentState = OFF;
         stopMotors();
       }
     }
   } else{
-    count = 0;
+    power_off_count = 0;
   }
 
   stateChanges();
@@ -127,7 +128,18 @@ void stateChanges(){
       break;
 
     case INIT:
-      currentState = TAKEOFF;
+      currentState = STARTING;
+      break;
+    
+    case STARTING:
+      if(readingsStable(sData)){
+        if(++takeoff_count >= STARTUP_TIME_MS/DELAY_MS){ // If readings have been stable for 3 seconds, takeoff
+          Serial.println("+ Readings Stable, ready for takeoff");
+          currentState = TAKEOFF;
+        }
+      } else {
+        takeoff_count = 0;
+      }
       break;
     
     case TAKEOFF:
@@ -171,14 +183,24 @@ void stateActions(){
       stopMotors();
       break;
     
-    case INIT:
+    case INIT: //TODO: don't wait in this case statement
       Serial.println("--- Starting up ---");
+      stopMotors();
       fiveBlink();
       delay(STARTUP_TIME_MS);  // Wait for ESCs to initialize
 
       readPressure(sData);
       basePressure = sData.pressure.pressure;
       hoverPressure = basePressure + TAKEOFF_HEIGHT_MM*PRESSURE_CHANGE_TO_ALTITUDE_MM; // Set to hover to 1m above base
+      break;
+    
+    case STARTING:
+      Serial.println("--- Starting ---");
+      setSpeed(START_SPEED);
+      writeESCs();
+
+      readSensorData();
+      sendReadings();
       break;
     
     case TAKEOFF:
