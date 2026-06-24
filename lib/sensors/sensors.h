@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <Adafruit_DPS310.h>
 #include <Arduino.h>
+#include "config.h"
 
 /* ----- Sensor Data Structure ----- */
 struct SensorData { // Stores the last few readings from each sensor

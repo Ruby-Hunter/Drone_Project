@@ -1,9 +1,6 @@
 #pragma once
 #include <stdint.h>
-#include <variant>
 
-using Num = std::variant<int, float, double, uint16_t, uint32_t>;
-
-void proportional(Num& plant, Num val, Num desired, Num k, Num step); // Proportional Control in PID
-void integral(Num& plant, Num* recentVals, Num desired, Num k, Num step); // Integral Control in PID
-void derivative(Num& plant, Num curVal, Num prevVal, Num k, Num step); // Derivative Control in PID
+void proportional(uint16_t& plant, float val, float desired, float k, float step); // Proportional Control in PID
+void integral(uint16_t& plant, float* recentVals, float desired, float k, float step); // Integral Control in PID
+void derivative(uint16_t& plant, float curVal, float prevVal, float k, float step); // Derivative Control in PID

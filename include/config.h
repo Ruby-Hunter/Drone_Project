@@ -40,21 +40,21 @@ const uint8_t MOVEMENT_THRESHOLD = 10;
 const long MAX_PWM_CHANGE = 6;
 const uint8_t NUM_DATA_VALS = 5; // How many past sensor vals stored for I term
 
-const uint8_t P_PITCH = 5;
-const uint8_t I_PITCH = 3;
-const uint8_t D_PITCH = 2;
+const float P_PITCH = 5;
+const float I_PITCH = 3;
+const float D_PITCH = 2;
 
-const uint8_t P_ROLL = 5;
-const uint8_t I_ROLL = 3;
-const uint8_t D_ROLL = 2;
+const float P_ROLL = 5;
+const float I_ROLL = 3;
+const float D_ROLL = 2;
 
-const uint8_t P_ALTITUDE = 5;
-const uint8_t I_ALTITUDE = 3;
-const uint8_t D_ALTITUDE = 2;
+const float P_ALTITUDE = 5;
+const float I_ALTITUDE = 3;
+const float D_ALTITUDE = 2;
 
-const uint8_t P_YAW = 5;
-const uint8_t I_YAW = 3;
-const uint8_t D_YAW = 2;
+const float P_YAW = 5;
+const float I_YAW = 3;
+const float D_YAW = 2;
 
 // Sensor Constants
 const float ALPHA = 0.5;

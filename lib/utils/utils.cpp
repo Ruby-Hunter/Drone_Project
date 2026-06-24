@@ -1,36 +1,39 @@
 #include "utils.h"
 #include "config.h"
+#include <cstdlib>
 
 
-void proportional(Num& plant, Num val, Num desired, Num k, Num step){
-  Num error = val - desired;
+void proportional(uint16_t& plant, float val, float desired, float k, float step){
+  float error = val - desired;
+  float change = abs(error * k) + step;
   if(error < 0){
-    plant += (-error * k) + step;
+    plant += static_cast<int16_t>(change);
   }
   else {
-    plant -= (error * k) + step;
+    plant -= static_cast<int16_t>(change);
   }
 }
 
-void integral(Num& plant, Num* recentVals, Num desired, Num k, Num step){
+void integral(uint16_t& plant, float* recentVals, float desired, float k, float step){
   float avgErr = 0;
   for(int i = 0; i < NUM_DATA_VALS; i++){
     avgErr += recentVals[i] - desired;
   }
-  avgErr /= NUM_DATA_VALS;
+  float change = abs((avgErr / NUM_DATA_VALS) * k) + step;
   if(avgErr < 0){
-    plant += (-avgErr * k) + step;
+    plant += static_cast<int16_t>(change);
   } else{
-    plant -= (avgErr * k) + step;
+    plant -= static_cast<int16_t>(change);
   }
 }
 
-void derivative(Num& plant, Num curVal, Num prevVal, Num k, Num step){
-  Num der = (curVal - prevVal) / 2.0;
+void derivative(uint16_t& plant, float curVal, float prevVal, float k, float step){
+  float der = (curVal - prevVal) / 2.0;
+  float change = abs(der * k) + step;
   if(prevVal < 0){
-    plant += (-der * k) + step;
+    plant += static_cast<int16_t>(change);
   } 
   else{
-    plant -= (der * k) + step;
+    plant -= static_cast<int16_t>(change);
   }
 }

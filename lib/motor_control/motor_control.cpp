@@ -1,7 +1,6 @@
 #include "motor_control.h"
 #include "config.h"
 #include "utils.h"
-#include "sensors.h"
 #include <Servo.h>
 #include <Arduino.h>
 #include <cmath>
@@ -153,10 +152,11 @@ void balanceAltitude(SensorDataHistory sHistory, float hoverPressure){
 void balanceAltitudeLidar(SensorDataHistory sHistory, int16_t desiredHeight_mm){
   // TODO: Tune PID constants, set desired value to variable
   uint16_t lidar_distance_mm = sHistory.lidar_distance_mm[sHistory.index];
-  uint16_t speed_change = 0;
-  proportional(speed_change, lidar_distance_mm, desiredHeight_mm, P_ALTITUDE, 1);
-  integral(speed_change, sHistory.lidar_distance_mm, 0, I_ALTITUDE, 0);
-  derivative(speed_change, lidar_distance_mm, sHistory.lidar_distance_mm[sHistory.prev_index], D_ALTITUDE, 0);
+  uint16_t speed_change_u = 100; // Give it a buffer so we don't have to change PID plant type
+  proportional(speed_change_u, lidar_distance_mm, desiredHeight_mm, P_ALTITUDE, 1);
+  integral(speed_change_u, (float *)sHistory.lidar_distance_mm, 0, I_ALTITUDE, 0);
+  derivative(speed_change_u, lidar_distance_mm, sHistory.lidar_distance_mm[sHistory.prev_index], D_ALTITUDE, 0);
+  int16_t speed_change = speed_change_u - 100;
   changeSpeed(speed_change);
   
   // int16_t height_diff_mm = sHistory.lidar_distance_mm[sHistory.index] - desiredHeight_mm;

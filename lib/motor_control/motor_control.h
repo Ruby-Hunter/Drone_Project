@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include "sensors.h"
 
 void motor_init(); // Set up motors
 
