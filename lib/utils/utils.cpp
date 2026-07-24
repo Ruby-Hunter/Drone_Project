@@ -27,10 +27,10 @@ void integral(uint16_t& plant, float* recentVals, float desired, float k, float 
   }
 }
 
-void derivative(uint16_t& plant, float curVal, float prevVal, float k, float step){
+void derivative(uint16_t& plant, float curVal, float prevVal, float desired, float k, float step){
   float der = (curVal - prevVal) / 2.0;
   float change = abs(der * k) + step;
-  if(prevVal < 0){
+  if(curVal < desired){
     plant += static_cast<int16_t>(change);
   } 
   else{

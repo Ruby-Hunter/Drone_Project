@@ -91,20 +91,20 @@ void balancePitch(SensorDataHistory sHistory){
   float pitch = sHistory.accel_x_g[sHistory.index];
   pitch = constrain(pitch, -1.5, 1.5); // Limit pitch to prevent extreme motor changes
   if(pitch > (0 + MOTION_THRESHOLD)){ // if it pitches too far forwards, increase front motor speeds
-    proportional(motor_1_Speed, pitch, 0, P_PITCH, 1);
-    proportional(motor_2_Speed, pitch, 0, P_PITCH, 1);
-    integral(motor_1_Speed, sHistory.accel_x_g, 0, I_PITCH, 0);
-    integral(motor_2_Speed, sHistory.accel_x_g, 0, I_PITCH, 0);
-    derivative(motor_1_Speed, pitch, sHistory.accel_x_g[sHistory.prev_index], D_PITCH, 0);
-    derivative(motor_2_Speed, pitch, sHistory.accel_x_g[sHistory.prev_index], D_PITCH, 0);
+    proportional(motor_1_Speed, pitch, DESIRED_PITCH, P_PITCH, 1);
+    proportional(motor_2_Speed, pitch, DESIRED_PITCH, P_PITCH, 1);
+    integral(motor_1_Speed, sHistory.accel_x_g, DESIRED_PITCH, I_PITCH, 0);
+    integral(motor_2_Speed, sHistory.accel_x_g, DESIRED_PITCH, I_PITCH, 0);
+    derivative(motor_1_Speed, pitch, sHistory.accel_x_g[sHistory.prev_index], DESIRED_PITCH, D_PITCH, 0);
+    derivative(motor_2_Speed, pitch, sHistory.accel_x_g[sHistory.prev_index], DESIRED_PITCH, D_PITCH, 0);
   }
   else if(pitch < (0 - MOTION_THRESHOLD)){ // pitch too far backwards, increase back motor speeds
-    proportional(motor_3_Speed, pitch, 0, P_PITCH, 1);
-    proportional(motor_4_Speed, pitch, 0, P_PITCH, 1);
-    integral(motor_3_Speed, sHistory.accel_x_g, 0, I_PITCH, 0);
-    integral(motor_4_Speed, sHistory.accel_x_g, 0, I_PITCH, 0);
-    derivative(motor_3_Speed, pitch, sHistory.accel_x_g[sHistory.prev_index], D_PITCH, 0);
-    derivative(motor_4_Speed, pitch, sHistory.accel_x_g[sHistory.prev_index], D_PITCH, 0);
+    proportional(motor_3_Speed, pitch, DESIRED_PITCH, P_PITCH, 1);
+    proportional(motor_4_Speed, pitch, DESIRED_PITCH, P_PITCH, 1);
+    integral(motor_3_Speed, sHistory.accel_x_g, DESIRED_PITCH, I_PITCH, 0);
+    integral(motor_4_Speed, sHistory.accel_x_g, DESIRED_PITCH, I_PITCH, 0);
+    derivative(motor_3_Speed, pitch, sHistory.accel_x_g[sHistory.prev_index], DESIRED_PITCH, D_PITCH, 0);
+    derivative(motor_4_Speed, pitch, sHistory.accel_x_g[sHistory.prev_index], DESIRED_PITCH, D_PITCH, 0);
   }
 }
 
@@ -113,25 +113,24 @@ void balanceRoll(SensorDataHistory sHistory){
   float roll = sHistory.accel_y_g[sHistory.index];
   roll = constrain(roll, -1.5, 1.5); // Limit roll to prevent extreme motor changes
   if(roll > (0 + MOTION_THRESHOLD)){ // if it rolls too far right, increase right (2, 3) motor speeds
-    proportional(motor_2_Speed, roll, 0, P_ROLL, 1);
-    proportional(motor_3_Speed, roll, 0, P_ROLL, 1);
-    integral(motor_2_Speed, sHistory.accel_y_g, 0, I_ROLL, 0);
-    integral(motor_3_Speed, sHistory.accel_y_g, 0, I_ROLL, 0);
-    derivative(motor_2_Speed, roll, sHistory.accel_y_g[sHistory.prev_index], D_ROLL, 0);
-    derivative(motor_3_Speed, roll, sHistory.accel_y_g[sHistory.prev_index], D_ROLL, 0);
+    proportional(motor_2_Speed, roll, DESIRED_ROLL, P_ROLL, 1);
+    proportional(motor_3_Speed, roll, DESIRED_ROLL, P_ROLL, 1);
+    integral(motor_2_Speed, sHistory.accel_y_g, DESIRED_ROLL, I_ROLL, 0);
+    integral(motor_3_Speed, sHistory.accel_y_g, DESIRED_ROLL, I_ROLL, 0);
+    derivative(motor_2_Speed, roll, sHistory.accel_y_g[sHistory.prev_index], DESIRED_ROLL, D_ROLL, 0);
+    derivative(motor_3_Speed, roll, sHistory.accel_y_g[sHistory.prev_index], DESIRED_ROLL, D_ROLL, 0);
   }
   else if(roll < (0 - MOTION_THRESHOLD)){ // roll too far left, increase left (1, 4) motor speeds
-    proportional(motor_1_Speed, roll, 0, P_ROLL, 1);
-    proportional(motor_4_Speed, roll, 0, P_ROLL, 1);
-    integral(motor_1_Speed, sHistory.accel_y_g, 0, I_ROLL, 0);
-    integral(motor_4_Speed, sHistory.accel_y_g, 0, I_ROLL, 0);
-    derivative(motor_1_Speed, roll, sHistory.accel_y_g[sHistory.prev_index], D_ROLL, 0);
-    derivative(motor_4_Speed, roll, sHistory.accel_y_g[sHistory.prev_index], D_ROLL, 0);
+    proportional(motor_1_Speed, roll, DESIRED_ROLL, P_ROLL, 1);
+    proportional(motor_4_Speed, roll, DESIRED_ROLL, P_ROLL, 1);
+    integral(motor_1_Speed, sHistory.accel_y_g, DESIRED_ROLL, I_ROLL, 0);
+    integral(motor_4_Speed, sHistory.accel_y_g, DESIRED_ROLL, I_ROLL, 0);
+    derivative(motor_1_Speed, roll, sHistory.accel_y_g[sHistory.prev_index], DESIRED_ROLL, D_ROLL, 0);
+    derivative(motor_4_Speed, roll, sHistory.accel_y_g[sHistory.prev_index], DESIRED_ROLL, D_ROLL, 0);
   }
 }
 
 void balanceAltitude(SensorDataHistory sHistory, float hoverPressure){
-  // TODO: Tune PID constants, set desired value to variable
   proportional(motor_1_Speed, sHistory.pressure[sHistory.index].pressure, hoverPressure, P_ALTITUDE, 1);
   // int16_t pressureError = hoverPressure - pressure;
   // if(pressure < (hoverPressure - PRESSURE_THRESHOLD_HPA)){ // drone is falling
@@ -150,12 +149,12 @@ void balanceAltitude(SensorDataHistory sHistory, float hoverPressure){
 }
 
 void balanceAltitudeLidar(SensorDataHistory sHistory, int16_t desiredHeight_mm){
-  // TODO: Tune PID constants, set desired value to variable
+  // TODO: Tune PID constants
   uint16_t lidar_distance_mm = sHistory.lidar_distance_mm[sHistory.index];
   uint16_t speed_change_u = 100; // Give it a buffer so we don't have to change PID plant type
   proportional(speed_change_u, lidar_distance_mm, desiredHeight_mm, P_ALTITUDE, 1);
-  integral(speed_change_u, (float *)sHistory.lidar_distance_mm, 0, I_ALTITUDE, 0);
-  derivative(speed_change_u, lidar_distance_mm, sHistory.lidar_distance_mm[sHistory.prev_index], D_ALTITUDE, 0);
+  integral(speed_change_u, (float *)sHistory.lidar_distance_mm, desiredHeight_mm, I_ALTITUDE, 0);
+  derivative(speed_change_u, lidar_distance_mm, sHistory.lidar_distance_mm[sHistory.prev_index], desiredHeight_mm, D_ALTITUDE, 0);
   int16_t speed_change = speed_change_u - 100;
   changeSpeed(speed_change);
   

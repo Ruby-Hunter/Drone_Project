@@ -40,6 +40,10 @@ const uint8_t MOVEMENT_THRESHOLD = 10;
 const long MAX_PWM_CHANGE = 6;
 const uint8_t NUM_DATA_VALS = 5; // How many past sensor vals stored for I term
 
+const float DESIRED_ROLL = 0.0f;
+const float DESIRED_PITCH = 0.0f;
+const float DESIRED_YAW = 0.0f;
+
 const float P_PITCH = 5;
 const float I_PITCH = 3;
 const float D_PITCH = 2;

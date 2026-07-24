@@ -191,7 +191,7 @@ void stateActions(){
 
       readPressure(sData);
       basePressure = sData.pressure.pressure;
-      hoverPressure = basePressure + TAKEOFF_HEIGHT_MM*PRESSURE_CHANGE_TO_ALTITUDE_MM; // Set to hover to 1m above base
+      hoverPressure = basePressure + TAKEOFF_HEIGHT_MM * PRESSURE_CHANGE_TO_ALTITUDE_MM; // Set to hover to 1m above base
       break;
     
     case STARTING:
