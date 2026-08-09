@@ -28,7 +28,7 @@ enum State { OFF, INIT, STARTING, TAKEOFF, HOVERING, FLYING, LANDING, TESTING };
 uint8_t currentState = OFF;
 uint32_t lastTick = 0;
 uint8_t power_off_count = 0; // If read 10 consecutive power offs, switch to OFF state
-uint8_t takeoff_count = 0; // If sensors are stable 10x, initiate takeoff
+uint8_t takeoff_count = 0; // If sensors are stable STARTUP_TIME_MS/DELAY_MS times, takeoff
 
 msgData msg;
 
@@ -105,6 +105,7 @@ void stateMachine(){ // State machine for drone
   if(!digitalRead(DRONE_POWER)){ // Failsafe
     power_off_count++;
     if(power_off_count > 10){
+      Serial.println("=========== Power off detected ===========");
       if(currentState != OFF && currentState != TESTING){
         currentState = OFF;
         stopMotors();
@@ -133,6 +134,8 @@ void stateChanges(){
     
     case STARTING:
       if(readingsStable(sData)){
+        // currentState = TAKEOFF;
+        // Serial.println("+ Readings Stable, ready for takeoff");
         if(++takeoff_count >= STARTUP_TIME_MS/DELAY_MS){ // If readings have been stable for 3 seconds, takeoff
           Serial.println("+ Readings Stable, ready for takeoff");
           currentState = TAKEOFF;

@@ -143,7 +143,9 @@ void updateHistory(SensorDataHistory& history, SensorData& data){
 }
 
 bool readingsStable(SensorData data){
-  return abs(data.accel_x_g) < MOTION_THRESHOLD && abs(data.accel_y_g) < MOTION_THRESHOLD && abs(data.accel_z_g - 1) < MOTION_THRESHOLD;
+  return abs(data.accel_x_g) < MOTION_THRESHOLD && abs(data.accel_y_g) < MOTION_THRESHOLD;
+    // return abs(data.accel_x_g) < MOTION_THRESHOLD && abs(data.accel_y_g) < MOTION_THRESHOLD && abs(data.accel_z_g) < MOTION_THRESHOLD;
+
 }
 
 void setGyroFunc(SensorFunc func) {

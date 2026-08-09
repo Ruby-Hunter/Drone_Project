@@ -23,7 +23,7 @@
 
 
 const uint32_t DELAY_MS = 50;
-const uint32_t STARTUP_TIME_MS = 3000;
+const uint32_t STARTUP_TIME_MS = 1000;
 
 // Conversion factors
 const float TWO_GS_FORCE = 16384.0f;
@@ -73,10 +73,10 @@ const uint16_t STOP_SPEED = 1000;
 const uint16_t START_SPEED = 1150;
 const uint16_t RISING_HOVER_SPEED = 1360;//unused
 const uint16_t MAX_HOVER_SPEED = 1200;//unused
-const uint16_t MAX_SPEED = 1250;
+const uint16_t MAX_SPEED = 1550;
 
 // Other constants
-const int16_t TAKEOFF_HEIGHT_MM = 300; // Target height for takeoff in mm
+const int16_t TAKEOFF_HEIGHT_MM = 500; // Target height for takeoff in mm
 const int16_t LANDING_DISTANCE_MM = 60; // Distance from sensor that triggers landing sequence
 
 // When the drone goes above this height, initiate landing sequence

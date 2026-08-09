@@ -68,6 +68,7 @@ void writeESCs(){
   motor_2_Speed = constrain(motor_2_Speed, STOP_SPEED, MAX_SPEED);
   motor_3_Speed = constrain(motor_3_Speed, STOP_SPEED, MAX_SPEED);
   motor_4_Speed = constrain(motor_4_Speed, STOP_SPEED, MAX_SPEED);
+  Serial.print("Motor Speeds: "); Serial.print(motor_1_Speed); Serial.print(", "); Serial.print(motor_2_Speed); Serial.print(", "); Serial.print(motor_3_Speed); Serial.print(", "); Serial.println(motor_4_Speed);
   esc1.writeMicroseconds(motor_1_Speed);
   esc2.writeMicroseconds(motor_2_Speed);
   esc3.writeMicroseconds(motor_3_Speed);
