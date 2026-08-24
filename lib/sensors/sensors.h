@@ -19,13 +19,15 @@ struct SensorData { // Stores the last few readings from each sensor
 struct SensorDataHistory { // Stores the last few readings from each sensor
     uint8_t index = 0;
     uint8_t prev_index = 0;
-    float accel_x_g[NUM_DATA_VALS] = {0};
-    float accel_y_g[NUM_DATA_VALS] = {0};
-    float accel_z_g[NUM_DATA_VALS] = {0};
-    float gyro_x_dps[NUM_DATA_VALS] = {0};
-    float gyro_y_dps[NUM_DATA_VALS] = {0};
-    float gyro_z_dps[NUM_DATA_VALS] = {0};
-    int16_t lidar_distance_mm[NUM_DATA_VALS] = {0};
+    uint8_t imu_idx = 0;
+    uint8_t prev_imu_idx = 0;
+    float accel_x_g[NUM_DATA_VALS] = {};
+    float accel_y_g[NUM_DATA_VALS] = {};
+    float accel_z_g[NUM_DATA_VALS] = {};
+    float gyro_x_dps[NUM_DATA_VALS] = {};
+    float gyro_y_dps[NUM_DATA_VALS] = {};
+    float gyro_z_dps[NUM_DATA_VALS] = {};
+    int16_t lidar_distance_mm[NUM_DATA_VALS] = {};
     sensors_event_t pressure[NUM_DATA_VALS] = {};
 };
 
@@ -36,6 +38,7 @@ void initDrivers(); // Sets sensor function pointers to HW versions
 /* ----- Sensor Reading Functions ----- */
 void readSensors(SensorData& data); // Read all sensors
 void advanceIndex(SensorDataHistory& history); // Advances index, called before reading new sensor data
+void advanceIMUIndex(SensorDataHistory& history); // Advances index for IMU data, called before reading new IMU data
 void updateHistory(SensorDataHistory& history, SensorData& data); // Updates history with new sensor data
 
 void readGyro(SensorData& data); // Read from Gyro

@@ -19,13 +19,16 @@ void balanceAltitude(SensorDataHistory sHistory, float hoverPressure); // Checks
 void balanceAltitudeLidar(SensorDataHistory sHistory, int16_t desiredHeight_mm); // Balances altitude based off of lidar sensor
 
 void takeOff(int16_t distance_mm); // Takeoff sequence
+void constrain_hover_pwm();
 
 void printSpeeds(); // Prints out current motor speeds
 
 //TODO: Move land and forceLand over here from main
 // void land(); // Landing sequence
-// void forceLand(); // Force the drone to land if pressure sensor isn't working
+void forceLand(); // Force the drone to land if pressure sensor isn't working
 
 /* ----- TESTING FUNCTIONS ----- */
 uint16_t getSpeed(int motorChoice = 4); // Gets speed of motorChoice motor; default is 4
 bool motorSpeedsEqual(uint16_t speed); // Checks if all motor speeds are equal to 'speed' value
+bool motorSpeedsLessThan(uint16_t speed); // Checks if all motor speeds are less than 'speed' value
+uint16_t getMotorSpeedAverage(); // Returns the average speed of all motors

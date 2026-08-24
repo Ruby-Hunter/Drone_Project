@@ -1,7 +1,7 @@
 /*
 Filename: main.cpp
 Desc:     Runs the main program, setting everything up and then ticking a SyncSM
-          every DELAY_MS ms. 
+          every MAIN_DELAY_MS ms. 
 */
 
 #include <Servo.h>
@@ -14,8 +14,10 @@ Desc:     Runs the main program, setting everything up and then ticking a SyncSM
 #include "config.h"
 #include "utils.h"
 
-SensorData sData; // Most recent sensor data
-SensorDataHistory sDataHist; // History of sensor data for PID control
+SensorData sData{}; // Most recent sensor data
+SensorData averageData{};
+SensorData serialData{};
+SensorDataHistory sDataHist{}; // History of sensor data for PID control
 
 float basePressure, hoverPressure;
 float altitude;
@@ -26,9 +28,12 @@ int16_t pwmx, pwmy, pwmz, pwmdist, pwmpres;
 // State Machine states
 enum State { OFF, INIT, STARTING, TAKEOFF, HOVERING, FLYING, LANDING, TESTING };
 uint8_t currentState = OFF;
-uint32_t lastTick = 0;
+uint32_t lastMainTick = 0;
+uint32_t lastSensorTick = 0;
+uint32_t lastIMUTick = 0;
+uint32_t lastSerialTick = 0;
 uint8_t power_off_count = 0; // If read 10 consecutive power offs, switch to OFF state
-uint8_t takeoff_count = 0; // If sensors are stable STARTUP_TIME_MS/DELAY_MS times, takeoff
+uint8_t takeoff_count = 0; // If sensors are stable STARTUP_TIME_MS/MAIN_DELAY_MS times, takeoff
 
 msgData msg;
 
@@ -44,9 +49,10 @@ bool reachedTakeoffHeight();
 bool outsideHoveringHeight();
 bool landSignal();
 void readSensorData();
-void sendReadings();
+void sendLogs(const SensorData& data);
+void sendReadings(const SensorData& data);
+SensorData averageHistory(const SensorDataHistory& history, uint8_t sampleCount);
 void land();
-void forceLand();
 void rcISR();
 void tripleBlink();
 void fiveBlink();
@@ -63,12 +69,36 @@ void setup() {
   delay(1000);
 }
 
-void loop() { // Main loop runs every DELAY_MS ms
-  if(millis() - lastTick >= DELAY_MS){
-    lastTick = millis();
+void loop() { // Main loop runs every MAIN_DELAY_MS ms
+  if(millis() - lastMainTick >= MAIN_DELAY_MS){
+    lastMainTick = millis();
+    averageData = averageHistory(sDataHist, MAIN_AVERAGE_SAMPLES);
     stateMachine();
     // Serial.println("Tick");
   }
+
+  if(millis() - lastSerialTick >= SERIAL_DELAY_MS){
+    lastSerialTick = millis();
+    serialData = averageHistory(sDataHist, SERIAL_AVERAGE_SAMPLES);
+    sendReadings(serialData);
+    // sendLogs(serialData);
+  }
+
+  if(currentState >= STARTING){
+    if(millis() - lastIMUTick >= IMU_DELAY_MS){
+      lastIMUTick = millis();
+      readGyro(sData);
+      advanceIMUIndex(sDataHist);
+      updateHistory(sDataHist, sData);
+    }
+
+    if(millis() - lastSensorTick >= SENSOR_DELAY_MS){ // TODO: Check how long reading sensors takes
+      lastSensorTick = millis();
+      
+      readSensorData();
+    }
+  }
+  
 }
 
 /* ----- SETUP FUNCTIONS ----- */
@@ -105,7 +135,7 @@ void stateMachine(){ // State machine for drone
   if(!digitalRead(DRONE_POWER)){ // Failsafe
     power_off_count++;
     if(power_off_count > 10){
-      Serial.println("=========== Power off detected ===========");
+      // Serial.println("=========== Power off detected ===========");
       if(currentState != OFF && currentState != TESTING){
         currentState = OFF;
         stopMotors();
@@ -133,10 +163,10 @@ void stateChanges(){
       break;
     
     case STARTING:
-      if(readingsStable(sData)){
+      if(readingsStable(averageData)){
         // currentState = TAKEOFF;
         // Serial.println("+ Readings Stable, ready for takeoff");
-        if(++takeoff_count >= STARTUP_TIME_MS/DELAY_MS){ // If readings have been stable for 3 seconds, takeoff
+        if(++takeoff_count >= STARTUP_TIME_MS/MAIN_DELAY_MS){ // If readings have been stable for 3 seconds, takeoff
           Serial.println("+ Readings Stable, ready for takeoff");
           currentState = TAKEOFF;
         }
@@ -170,8 +200,9 @@ void stateChanges(){
       break;
     
     case LANDING:
-      if(motorSpeedsEqual(STOP_SPEED)){
+      if(getMotorSpeedAverage() <= START_SPEED){
         currentState = TESTING;
+        fiveBlink();
       }
       break;
   }
@@ -181,13 +212,13 @@ void stateChanges(){
 void stateActions(){
   switch (currentState){ 
     case OFF:
-      Serial.println("--- Motors off ---");
+      // Serial.println("--- Motors off ---");
       digitalWrite(LED_PIN, HIGH);
       stopMotors();
       break;
     
-    case INIT: //TODO: don't wait in this case statement
-      Serial.println("--- Starting up ---");
+    case INIT:
+      Serial.println("--- INIT ---");
       stopMotors();
       fiveBlink();
       delay(STARTUP_TIME_MS);  // Wait for ESCs to initialize
@@ -198,86 +229,81 @@ void stateActions(){
       break;
     
     case STARTING:
-      Serial.println("--- Starting ---");
+      // Serial.println("--- Starting ---");
       setSpeed(START_SPEED);
       writeESCs();
-
-      readSensorData();
-      sendReadings();
       break;
     
     case TAKEOFF:
-      Serial.println("--- Takeoff ---");
-      readSensorData();
-      sendReadings();
-
-      takeOff(sData.lidar_distance_mm);
+      // Serial.println("--- Takeoff ---");
+      
+      // takeOff(averageData.lidar_distance_mm);
       balancePitch(sDataHist);
       balanceRoll(sDataHist);
+      balanceAltitudeLidar(sDataHist, TAKEOFF_HEIGHT_MM);
+      constrain_hover_pwm();
       writeESCs();
       break;
     
     case HOVERING:
-      Serial.println("--- Hovering ---");
-      readSensorData();
-      sendReadings();
-
+      // Serial.println("--- Hovering ---");
+      
       balancePitch(sDataHist);
       balanceRoll(sDataHist);
       // balanceAltitude(sData.pressure.pressure, hoverPressure);
       balanceAltitudeLidar(sDataHist, TAKEOFF_HEIGHT_MM);
-
+      constrain_hover_pwm();
       writeESCs();
       break;
     
     case FLYING:
-      Serial.println("--- Flying ---");
-      readSensorData();
-      sendReadings();
-
+      // Serial.println("--- Flying ---");
+      
       if(xStable(msg)) balancePitch(sDataHist); // Keep balanced if no move command, else move
       else moveX(msg.x_change);
       if(yStable(msg)) balanceRoll(sDataHist);
       else moveY(msg.y_change);
-      balanceAltitude(sDataHist, hoverPressure);
+      balanceAltitudeLidar(sDataHist, TAKEOFF_HEIGHT_MM);
 
       writeESCs();
       break;
 
     case LANDING:
-      Serial.println("--- Landing Sequence ---");
+      // Serial.println("--- Landing Sequence ---");
       digitalWrite(LED_PIN, HIGH);
-      readSensorData();
-      sendReadings();
 
       forceLand();
       balancePitch(sDataHist);
       balanceRoll(sDataHist);
+      // if(averageData.lidar_distance_mm > LANDING_DISTANCE_MM){
+      //   balanceAltitudeLidar(sDataHist, LANDING_DISTANCE_MM);
+      // } else {
+      //   setSpeed(STOP_SPEED);
+      // }
       // land();
       break;
     
     case TESTING: // Just read values and print them
-      Serial.println("--- Testing ---");
+      // Serial.println("--- Testing ---");
       digitalWrite(LED_PIN, HIGH);
       stopMotors();
       writeESCs(); // write motor speeds
-      readSensorData();
-      sendReadings();
-      delay(500 - DELAY_MS);
+
+      // delay(500 - MAIN_DELAY_MS);
       break;
   }
 }
 
 bool reachedTakeoffHeight(){ // Returns true if drone is at or above takeoff height
-  return {abs(sData.lidar_distance_mm - TAKEOFF_HEIGHT_MM) <= ALTITUDE_THRESHOLD_MM};
+  return {abs(averageData.lidar_distance_mm - TAKEOFF_HEIGHT_MM) <= ALTITUDE_THRESHOLD_MM};
 }
 
 bool outsideHoveringHeight(){ // Returns true if drone is outside of its min/max height
-  return {sData.lidar_distance_mm < LANDING_DISTANCE_MM || sData.pressure.pressure > (HEIGHT_LIMIT_HPA + basePressure)};
+  return {averageData.lidar_distance_mm < LANDING_DISTANCE_MM || averageData.pressure.pressure > (HEIGHT_LIMIT_HPA + basePressure)};
 }
 
 bool landSignal(){ // Returnns true if signal to land has been recieved
-  return {sData.lidar_distance_mm < LANDING_DISTANCE_MM};
+  return {averageData.lidar_distance_mm < LANDING_DISTANCE_MM};
 }
 
 
@@ -288,25 +314,101 @@ void readSensorData(){
   updateHistory(sDataHist, sData);
 }
 
-void sendReadings(){ // Send readings to Operator
+void sendLogs(const SensorData& data){
+  Serial.print("DATA,");
+  Serial.print(millis());
+  Serial.print(",");
+  Serial.print(data.accel_x_g, 4);
+  Serial.print(",");
+  Serial.print(data.accel_y_g, 4);
+  Serial.print(",");
+  Serial.print(data.accel_z_g, 4);
+  Serial.print(",");
+  Serial.print(data.gyro_x_dps, 3);
+  Serial.print(",");
+  Serial.print(data.gyro_y_dps, 3);
+  Serial.print(",");
+  Serial.print(data.gyro_z_dps, 3);
+  Serial.print(",");
+  Serial.print(data.lidar_distance_mm);
+  Serial.print(",");
+  Serial.println(data.pressure.pressure, 4);
+}
+
+void sendReadings(const SensorData& data){ // Send readings to Operator
   printSpeeds();
-  Serial.print("Accel X (g): "); Serial.print(sData.accel_x_g);
-  Serial.print(" | Accel Y (g): "); Serial.print(sData.accel_y_g);
-  Serial.print(" | Accel Z (g): "); Serial.print(sData.accel_z_g);
-  Serial.print(" | Gyro X (dps): "); Serial.print(sData.gyro_x_dps);
-  Serial.print(" | Gyro Y (dps): "); Serial.print(sData.gyro_y_dps);
-  Serial.print(" | Gyro Z (dps): "); Serial.print(sData.gyro_z_dps);
-  Serial.print(" | Distance (mm): "); Serial.print(sData.lidar_distance_mm);
-  Serial.print(" | BasePressure (hPa): "); Serial.print(basePressure);
-  Serial.print(" | Pressure (hPa): "); Serial.print(sData.pressure.pressure);
-  Serial.print(" | Altitude (mm): "); Serial.println((sData.pressure.pressure - basePressure) / PRESSURE_CHANGE_TO_ALTITUDE_MM);
+  Serial.print("State: -- "); 
+  switch(currentState){
+    case OFF: Serial.print("OFF"); break;
+    case INIT: Serial.print("INIT"); break;
+    case STARTING: Serial.print("STARTING"); break;
+    case TAKEOFF: Serial.print("TAKEOFF"); break;
+    case HOVERING: Serial.print("HOVERING"); break;
+    case FLYING: Serial.print("FLYING"); break;
+    case LANDING: Serial.print("LANDING"); break;
+    case TESTING: Serial.print("TESTING"); break;
+  }
+  Serial.println(" --");
+  Serial.print("   Acc X (g): "); Serial.print(data.accel_x_g);
+  Serial.print(" | Acc Y (g): "); Serial.print(data.accel_y_g);
+  Serial.print(" | Acc Z (g): "); Serial.print(data.accel_z_g);
+  Serial.print(" | Gyro X (dps): "); Serial.print(data.gyro_x_dps);
+  Serial.print(" | Gyro Y (dps): "); Serial.print(data.gyro_y_dps);
+  Serial.print(" | Gyro Z (dps): "); Serial.println(data.gyro_z_dps);
+  Serial.print("   Dist (mm): "); Serial.print(data.lidar_distance_mm);
+  Serial.print(" | DistCorr (mm): "); Serial.print(correctAltitude(data.lidar_distance_mm, data.accel_x_g, data.accel_y_g)); // Correct for tilt
+  Serial.print(" | BasPres (hPa): "); Serial.print(basePressure);
+  Serial.print(" | Pres (hPa): "); Serial.print(data.pressure.pressure);
+  Serial.print(" | Alt (mm): "); Serial.println((data.pressure.pressure - basePressure) / PRESSURE_CHANGE_TO_ALTITUDE_MM);
+}
+
+SensorData averageHistory(const SensorDataHistory& history, uint8_t sampleCount) {
+  SensorData average{};
+
+  if(sampleCount == 0) {
+    return average; // Avoid division by zero
+  }
+  int32_t lidar_distance_mm_sum = 0;
+  for(uint8_t i = 0; i < sampleCount; i++){
+    int index = (history.index + NUM_DATA_VALS - i) % NUM_DATA_VALS;
+
+    lidar_distance_mm_sum += history.lidar_distance_mm[index];
+    average.pressure.pressure += history.pressure[index].pressure;
+  }
+
+  for(uint8_t i = 0; i < sampleCount * IMU_SAMPLES_FACTOR; i++){
+    int imu_idx = (history.imu_idx + NUM_DATA_VALS - i) % NUM_DATA_VALS;
+
+    average.accel_x_g += history.accel_x_g[imu_idx];
+    average.accel_y_g += history.accel_y_g[imu_idx];
+    average.accel_z_g += history.accel_z_g[imu_idx];
+
+    average.gyro_x_dps += history.gyro_x_dps[imu_idx];
+    average.gyro_y_dps += history.gyro_y_dps[imu_idx];
+    average.gyro_z_dps += history.gyro_z_dps[imu_idx];
+  }
+
+
+
+  average.accel_x_g /= sampleCount * IMU_SAMPLES_FACTOR;
+  average.accel_y_g /= sampleCount * IMU_SAMPLES_FACTOR;
+  average.accel_z_g /= sampleCount * IMU_SAMPLES_FACTOR;
+
+  average.gyro_x_dps /= sampleCount * IMU_SAMPLES_FACTOR;
+  average.gyro_y_dps /= sampleCount * IMU_SAMPLES_FACTOR;
+  average.gyro_z_dps /= sampleCount * IMU_SAMPLES_FACTOR;
+
+  average.lidar_distance_mm = lidar_distance_mm_sum / sampleCount;
+  average.pressure.pressure /= sampleCount;
+  
+  return average;
 }
 
 
 /* ----- MOTOR CONTROL FUNCTIONS ----- */
 void land(){ // Landing sequence
   readSensorData();
-  static float curPressure = sData.pressure.pressure;
+  static float curPressure = averageData.pressure.pressure;
 
   while((getSpeed(1) + getSpeed(2) + getSpeed(3) + getSpeed(4)) > 4800) {
     readSensorData();
@@ -322,26 +424,6 @@ void land(){ // Landing sequence
     setSpeed(pwm);
     writeESCs();
     delay(80);
-  }
-}
-
-void forceLand(){ // Force the drone to land if pressure sensor isn't working
-  static uint16_t pwm = 1200;
-  if((getSpeed(1) + getSpeed(2) + getSpeed(3) + getSpeed(4)) > 4800) {
-    changeSpeed(-3);
-    writeESCs();
-  }
-  else {
-    if(pwm == 1200) Serial.println("--- Hit bottom ---"); // debug
-    setSpeed(pwm);
-    writeESCs();
-    if(pwm > STOP_SPEED){
-      pwm -= 6;
-    } else {
-      Serial.println("Landed");
-      stopMotors();
-      fiveBlink();
-    }
   }
 }
 

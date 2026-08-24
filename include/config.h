@@ -22,8 +22,17 @@
 #endif
 
 
-const uint32_t DELAY_MS = 50;
-const uint32_t STARTUP_TIME_MS = 1000;
+// Real Time Delays
+const uint32_t MAIN_DELAY_MS = 80; // Main loop delay
+const uint32_t IMU_DELAY_MS = 10; // IMU read delay
+const uint32_t SENSOR_DELAY_MS = 20; // Sensor read delay
+const uint32_t SERIAL_DELAY_MS = 400; // Serial output delay
+const uint32_t STARTUP_TIME_MS = 1500;
+
+
+const uint8_t MAIN_AVERAGE_SAMPLES = MAIN_DELAY_MS / SENSOR_DELAY_MS;
+const uint8_t SERIAL_AVERAGE_SAMPLES = SERIAL_DELAY_MS / SENSOR_DELAY_MS;
+const uint8_t IMU_SAMPLES_FACTOR = SENSOR_DELAY_MS / IMU_DELAY_MS;
 
 // Conversion factors
 const float TWO_GS_FORCE = 16384.0f;
@@ -37,46 +46,46 @@ const float PRESSURE_THRESHOLD_HPA = 0.01f; // In hPa
 const uint8_t MOVEMENT_THRESHOLD = 10;
 
 // PID Constants
-const long MAX_PWM_CHANGE = 6;
-const uint8_t NUM_DATA_VALS = 5; // How many past sensor vals stored for I term
+const long MAX_PWM_CHANGE = 8;
+const uint8_t NUM_DATA_VALS = 60; // How many past sensor vals stored for I term
 
 const float DESIRED_ROLL = 0.0f;
 const float DESIRED_PITCH = 0.0f;
 const float DESIRED_YAW = 0.0f;
 
-const float P_PITCH = 5;
-const float I_PITCH = 3;
-const float D_PITCH = 2;
+const float P_PITCH = 3.2;
+const float I_PITCH = 2;
+const float D_PITCH = 1.8;
 
-const float P_ROLL = 5;
-const float I_ROLL = 3;
-const float D_ROLL = 2;
+const float P_ROLL = 3.2;
+const float I_ROLL = 2;
+const float D_ROLL = 1.8;
 
-const float P_ALTITUDE = 5;
-const float I_ALTITUDE = 3;
-const float D_ALTITUDE = 2;
+const float P_ALTITUDE = 0.4;
+const float I_ALTITUDE = 0.2;
+const float D_ALTITUDE = 0.2;
 
-const float P_YAW = 5;
-const float I_YAW = 3;
-const float D_YAW = 2;
+const float P_YAW = 2;
+const float I_YAW = 1;
+const float D_YAW = 0.5;
 
 // Sensor Constants
 const float ALPHA = 0.5;
-const float ACCEL_LP_MAX_G = 0.5; // LP = Low Pass
-const float GYRO_LP_MAX_DPS = 30; // LP = Low Pass
+const float ACCEL_LP_MAX_G = 0.3; // LP = Low Pass
+const float GYRO_LP_MAX_DPS = 20; // LP = Low Pass
 
 // Take off Constants
-const long TAKEOFF_SPEED = 8;
+const long TAKEOFF_SPEED = 4;
 
 // Motor speed constants (in microseconds)
 const uint16_t STOP_SPEED = 1000;
 const uint16_t START_SPEED = 1150;
-const uint16_t RISING_HOVER_SPEED = 1360;//unused
-const uint16_t MAX_HOVER_SPEED = 1200;//unused
-const uint16_t MAX_SPEED = 1550;
+const uint16_t MIN_HOVER_SPEED = 1150;
+const uint16_t MAX_HOVER_SPEED = 1600;
+const uint16_t MAX_SPEED = 1650;
 
 // Other constants
-const int16_t TAKEOFF_HEIGHT_MM = 500; // Target height for takeoff in mm
+const int16_t TAKEOFF_HEIGHT_MM = 450; // Target height for takeoff in mm
 const int16_t LANDING_DISTANCE_MM = 60; // Distance from sensor that triggers landing sequence
 
 // When the drone goes above this height, initiate landing sequence
